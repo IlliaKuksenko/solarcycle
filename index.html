@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SolarCycle">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SolarCycle</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        :root { --safe-top: env(safe-area-inset-top); }
+        html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        
+        .app-container { 
+            display: flex; flex-direction: column; height: 100vh; 
+            padding: 1rem; padding-top: calc(0.5rem + var(--safe-top)); 
+            box-sizing: border-box; max-width: 450px; margin: 0 auto; 
+        }
+
+        .visualizer-area { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; position: relative; margin-bottom: -15px; }
+        
+        canvas { 
+            max-width: 95%; max-height: 95%; width: auto !important; height: auto !important; 
+            object-fit: contain; background-color: #ffffff; border-radius: 2.5rem; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); 
+        }
+
+        .controls-area { flex: 0 0 auto; width: 100%; z-index: 10; }
+
+        .settings-panel { 
+            display: none; position: absolute; top: 0; left: 0; right: 0; z-index: 100; 
+            background-color: #ffffff;
+            @apply p-6 rounded-[2.5rem] shadow-2xl border border-slate-200;
+        }
+        .settings-panel.active { display: block; animation: fadeIn 0.2s ease-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- FORCED VISIBILITY DAY SLIDER --- */
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 32px; display: block; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 12px; background: #e2e8f0; border-radius: 999px; border: 1px solid #cbd5e1; }
+        input[type="range"]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; 
+            background: #4f46e5; cursor: pointer; margin-top: -9px; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="flex justify-between items-center mb-2 px-1">
+            <div>
+                <h1 class="text-xl font-black text-slate-900 tracking-tight">SolarCycle</h1>
+                <div id="activeOffsetDisplay" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">System Ready</div>
+            </div>
+            <button id="settingsToggle" class="p-2 bg-white rounded-xl shadow-sm text-slate-400 border border-slate-100 active:scale-95 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+        </div>
+
+        <div class="visualizer-area">
+            <div id="settingsPanel" class="settings-panel">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Configuration</h2>
+                    <button id="closeSettings" class="p-1 text-slate-300 hover:text-slate-900 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Lat</span><input type="number" id="latitudeInput" value="45.27" step="0.01" class="w-full text-center p-2 rounded-xl bg-slate-50 font-bold outline-none border border-slate-100"></div>
+                    <div class="text-center"><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Lon</span><input type="number" id="longitudeInput" value="-66.06" step="0.01" class="w-full text-center p-2 rounded-xl bg-slate-50 font-bold outline-none border border-slate-100"></div>
+                </div>
+                <div class="flex justify-between items-center mb-4 bg-slate-50 p-2 rounded-2xl">
+                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-2">UTC</label>
+                    <input type="number" id="tzOffsetInput" value="-4" class="w-8 text-center font-black bg-transparent">
+                    <button id="toggleDstButton" class="px-3 py-1.5 bg-slate-900 text-white font-black rounded-lg text-[9px]">DST: <span id="timeModeDisplay">OFF</span></button>
+                </div>
+                <button id="getLocationBtn" class="w-full py-3 bg-indigo-600 text-white font-black rounded-xl text-[9px] uppercase shadow-md active:scale-95 transition">📍 Sync GPS</button>
+            </div>
+
+            <canvas id="dayNightCanvas" width="500" height="500"></canvas>
+        </div>
+
+        <div class="controls-area space-y-3">
+            <div class="grid grid-cols-2 gap-2 bg-white rounded-[1.5rem] p-4 shadow-sm border border-slate-50">
+                <div class="flex flex-col items-center border-r border-slate-100">
+                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sunrise</span>
+                    <span id="sunriseTime" class="text-xl font-black text-amber-500">--:--</span>
+                    <div class="mt-1 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m12.72-12.72l-1.41 1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
+                        <span id="dayLengthValue" class="text-[10px] font-black text-slate-700">--h --m</span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sunset</span>
+                    <span id="sunsetTime" class="text-xl font-black text-indigo-600">--:--</span>
+                    <div class="mt-1 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <span id="nightLengthValue" class="text-[10px] font-black text-slate-700">--h --m</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+                <div class="flex justify-between items-end mb-1">
+                    <span id="currentDateDisplay" class="text-2xl font-black text-slate-900">--</span>
+                    <span id="currentDayDisplay" class="text-[9px] font-bold text-slate-300 uppercase">Day 1</span>
+                </div>
+                <input type="range" id="daySlider" min="1" max="365" value="1">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.35;
+            const daySlider = document.getElementById('daySlider'), currentDayDisplay = document.getElementById('currentDayDisplay'), currentDateDisplay = document.getElementById('currentDateDisplay');
+            const sunriseTimeDisplay = document.getElementById('sunriseTime'), sunsetTimeDisplay = document.getElementById('sunsetTime'), dayLengthValue = document.getElementById('dayLengthValue'), nightLengthValue = document.getElementById('nightLengthValue');
+            const latitudeInput = document.getElementById('latitudeInput'), longitudeInput = document.getElementById('longitudeInput'), tzOffsetInput = document.getElementById('tzOffsetInput');
+            const toggleDstButton = document.getElementById('toggleDstButton'), timeModeDisplay = document.getElementById('timeModeDisplay'), activeOffsetDisplay = document.getElementById('activeOffsetDisplay');
+            const settingsToggle = document.getElementById('settingsToggle'), settingsPanel = document.getElementById('settingsPanel'), closeSettings = document.getElementById('closeSettings');
+
+            const now = new Date(), YEAR = now.getFullYear();
+            const isLeapYear = (YEAR % 4 === 0 && (YEAR % 100 !== 0 || YEAR % 400 === 0));
+            const start = new Date(YEAR, 0, 0), todayOrdinal = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            let currentDay = todayOrdinal, isDst = false;
+
+            settingsToggle.addEventListener('click', () => settingsPanel.classList.add('active'));
+            closeSettings.addEventListener('click', () => settingsPanel.classList.remove('active'));
+
+            function getSunTimes(day, lat, lon, tzOffset, isDst) {
+                const utcDate = new Date(Date.UTC(YEAR, 0, day, 12));
+                const times = SunCalc.getTimes(utcDate, lat, lon), offset = tzOffset + (isDst ? 1 : 0);
+                const toWall = (date) => (date && !isNaN(date.getTime())) ? (new Date(date.getTime() + (offset * 3600000)).getUTCHours() + new Date(date.getTime() + (offset * 3600000)).getUTCMinutes() / 60) : null;
+                const dawn = toWall(times.dawn), dusk = toWall(times.dusk), sunrise = toWall(times.sunrise), sunset = toWall(times.sunset);
+                const safeSunrise = sunrise !== null ? sunrise : dawn, safeSunset = sunset !== null ? sunset : dusk;
+                let dayLen = 0, nightLen = 0;
+                if (dawn !== null && dusk !== null && sunrise !== null && sunset !== null) {
+                    dayLen = (sunset - sunrise + 24) % 24; 
+                    // Night length is the sum of the dark periods
+                    nightLen = 24 - ((sunrise - dawn + 24) % 24 + (dusk - sunset + 24) % 24 + dayLen);
+                } else { if (SunCalc.getPosition(utcDate, lat, lon).altitude > 0) dayLen = 24; else nightLen = 0; }
+                return { dawn, dusk, sunrise: safeSunrise, sunset: safeSunset, dayLen, nightLen };
+            }
+
+            function drawClock() {
+                ctx.clearRect(0, 0, W, H);
+                const lat = parseFloat(latitudeInput.value), lon = parseFloat(longitudeInput.value), offset = parseFloat(tzOffsetInput.value) + (isDst ? 1 : 0);
+                const times = getSunTimes(currentDay, lat, lon, parseFloat(tzOffsetInput.value), isDst);
+                const d = new Date(), nowH = (d.getUTCHours() + d.getUTCMinutes() / 60 + offset + 24) % 24;
+                
+                const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
+                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 40; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
+
+                drawArc(times.dusk, times.dawn, '#0f172a'); drawArc(times.dawn, times.sunrise, '#6366f1'); drawArc(times.sunrise, times.sunset, '#fbbf24'); drawArc(times.sunset, times.dusk, '#6366f1');
+
+                ctx.fillStyle = '#94a3b8'; ctx.font = '700 12px Inter'; ctx.textAlign = 'center';
+                for (let h = 0; h < 24; h++) { const p = timeToPolar(h, CLOCK_RADIUS + 40); ctx.fillText(h.toString(), p.x, p.y); }
+
+                const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
+                
+                // Center Clock Info
+                const hDisplay = Math.floor(nowH), mDisplay = Math.floor((nowH % 1) * 60);
+                ctx.fillStyle = '#1e293b'; ctx.font = '800 32px Inter';
+                ctx.fillText(`${hDisplay % 12 || 12}:${String(mDisplay).padStart(2, '0')}`, centerX, centerY - 8);
+                ctx.font = '700 10px Inter'; ctx.fillStyle = '#94a3b8';
+                ctx.fillText(hDisplay >= 12 ? 'PM' : 'AM', centerX, centerY + 10);
+
+                // Daylight Countdown
+                if (nowH >= times.sunrise && nowH < times.sunset) {
+                    const remaining = times.sunset - nowH;
+                    const rH = Math.floor(remaining), rM = Math.floor((remaining % 1) * 60);
+                    ctx.font = '900 10px Inter'; ctx.fillStyle = '#f59e0b';
+                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 32);
+                } else {
+                    ctx.font = '900 10px Inter'; ctx.fillStyle = '#6366f1';
+                    ctx.fillText("NIGHT MODE", centerX, centerY + 32);
+                }
+                
+                const toClock = (h) => { const hh = Math.floor(h), mm = Math.round((h % 1) * 60); return `${hh % 12 || 12}:${String(mm).padStart(2, '0')} ${hh >= 12 ? 'PM' : 'AM'}`; };
+                const formatLen = (l) => `${Math.floor(l)}h ${Math.round((l % 1) * 60)}m`;
+                
+                sunriseTimeDisplay.textContent = toClock(times.sunrise); 
+                sunsetTimeDisplay.textContent = toClock(times.sunset);
+                dayLengthValue.textContent = formatLen(times.dayLen); 
+                nightLengthValue.textContent = formatLen(times.nightLen);
+            }
+
+            const update = () => {
+                currentDay = parseInt(daySlider.value);
+                localStorage.setItem('sun_lat', latitudeInput.value); localStorage.setItem('sun_lon', longitudeInput.value); localStorage.setItem('sun_dst', isDst); localStorage.setItem('sun_tz', tzOffsetInput.value);
+                currentDayDisplay.textContent = `Day ${currentDay}`; 
+                currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                timeModeDisplay.textContent = isDst ? 'ON' : 'OFF';
+                activeOffsetDisplay.textContent = `UTC ${parseFloat(tzOffsetInput.value) + (isDst ? 1 : 0)} | ${parseFloat(latitudeInput.value).toFixed(2)}N, ${parseFloat(longitudeInput.value).toFixed(2)}W`;
+                drawClock();
+            };
+
+            document.getElementById('getLocationBtn').addEventListener('click', () => { navigator.geolocation.getCurrentPosition((pos) => { latitudeInput.value = pos.coords.latitude.toFixed(4); longitudeInput.value = pos.coords.longitude.toFixed(4); update(); }); });
+            toggleDstButton.addEventListener('click', () => { isDst = !isDst; update(); });
+            [daySlider, latitudeInput, longitudeInput, tzOffsetInput].forEach(e => e.addEventListener('input', update));
+            window.onload = () => {
+                latitudeInput.value = localStorage.getItem('sun_lat') || 45.27; longitudeInput.value = localStorage.getItem('sun_lon') || -66.06;
+                tzOffsetInput.value = localStorage.getItem('sun_tz') || -4; isDst = localStorage.getItem('sun_dst') === 'true';
+                daySlider.value = todayOrdinal; update(); setInterval(drawClock, 30000);
+            };
+        })();
+    </script>
+</body>
+</html>
