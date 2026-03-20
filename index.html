@@ -9,37 +9,34 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
-        html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; }
+        html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100vh; overflow: hidden; position: fixed; width: 100%; }
         
         .app-container { 
-            display: flex; flex-direction: column; height: 100vh; 
-            padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); 
+            display: flex; flex-direction: column; height: 100%; 
+            padding: 0.5rem; padding-top: calc(0.2rem + var(--safe-top)); 
             box-sizing: border-box; max-width: 420px; margin: 0 auto; 
         }
 
-        /* Shrink clock area to leave room for the floating slider */
-        .visualizer-area { flex: 1; display: flex; align-items: flex-start; justify-content: center; min-height: 0; position: relative; padding-top: 1rem; }
+        .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; margin-bottom: 9rem; }
         
         canvas { 
-            max-width: 90%; max-height: 80%; width: auto !important; height: auto !important; 
-            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 1.5rem; 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03); 
+            max-width: 100%; max-height: 90%; width: auto !important; height: auto !important; 
+            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2rem; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
         }
 
-        .metrics-card { width: 100%; background: white; border-radius: 1.25rem; padding: 0.75rem; display: grid; grid-cols: 2; gap: 0.5rem; margin-top: auto; margin-bottom: 5.5rem; }
-
-        /* FLOATING SLIDER: Stays on top of browser bars */
-        .floating-slider {
-            position: fixed; bottom: calc(0.5rem + var(--safe-bottom)); left: 0.5rem; right: 0.5rem;
-            background: white; padding: 0.75rem; border-radius: 1.25rem; 
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.08); z-index: 50; border: 1px solid #f1f5f9;
+        /* INTEGRATED INFO HUB: Combines slider and metrics to prevent overlapping */
+        .info-hub {
+            position: fixed; bottom: calc(0.6rem + var(--safe-bottom)); left: 0.6rem; right: 0.6rem;
+            background: white; padding: 1rem; border-radius: 1.5rem; 
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.05); z-index: 50; border: 1px solid #f1f5f9;
         }
 
-        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; }
-        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 24px; margin: 0.5rem 0; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { 
             -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; 
-            background: #4f46e5; margin-top: -8px; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: #4f46e5; margin-top: -8px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
         .settings-panel { 
@@ -52,44 +49,48 @@
 <body>
 
     <div class="app-container">
-        <div class="flex justify-between items-center px-1 mb-1">
-            <h1 class="text-sm font-black text-slate-900 uppercase">SolarCycle</h1>
-            <button id="settingsToggle" class="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">⚙️</button>
+        <div class="flex justify-between items-center px-2 mb-1">
+            <h1 class="text-sm font-black text-slate-900 uppercase tracking-tight">SolarCycle</h1>
+            <button id="settingsToggle" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100">⚙️</button>
         </div>
 
         <div class="visualizer-area">
-            <div id="settingsPanel" class="settings-panel shadow-lg">
-                <input type="number" id="latitudeInput" value="45.27" class="w-full mb-2 p-2 bg-slate-50 rounded text-xs font-bold">
-                <input type="number" id="longitudeInput" value="-66.06" class="w-full mb-2 p-2 bg-slate-50 rounded text-xs font-bold">
-                <button id="toggleDstButton" class="w-full py-2 bg-slate-900 text-white rounded text-xs font-black">DST: <span id="timeModeDisplay">OFF</span></button>
-                <button id="closeSettings" class="w-full mt-2 text-[10px] font-bold text-slate-300">CLOSE</button>
+            <div id="settingsPanel" class="settings-panel shadow-2xl">
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <input type="number" id="latitudeInput" value="45.27" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+                    <input type="number" id="longitudeInput" value="-66.06" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+                </div>
+                <button id="toggleDstButton" class="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest">DST: <span id="timeModeDisplay">OFF</span></button>
+                <button id="closeSettings" class="w-full mt-3 text-[10px] font-bold text-slate-300 uppercase">Dismiss</button>
             </div>
-            <canvas id="dayNightCanvas" width="500" height="500"></canvas>
-        </div>
-
-        <div class="metrics-card shadow-sm border border-slate-50 flex justify-around">
-            <div class="text-center">
-                <span id="sunriseTime" class="text-base font-black text-amber-500">--:--</span>
-                <p id="dayLengthValue" class="text-[8px] font-bold text-slate-400 uppercase">-- DAY</p>
-            </div>
-            <div class="text-center">
-                <span id="sunsetTime" class="text-base font-black text-indigo-600">--:--</span>
-                <p id="nightLengthValue" class="text-[8px] font-bold text-slate-400 uppercase">-- NIGHT</p>
-            </div>
+            <canvas id="dayNightCanvas" width="600" height="600"></canvas>
         </div>
     </div>
 
-    <div class="floating-slider">
-        <div class="flex justify-between items-baseline mb-1">
-            <span id="currentDateDisplay" class="text-sm font-black text-slate-900">--</span>
-            <button id="resetToday" class="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">TODAY</button>
+    <div class="info-hub">
+        <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-50">
+            <div class="text-left">
+                <span id="sunriseTime" class="text-sm font-black text-amber-500">--:--</span>
+                <p id="dayLengthValue" class="text-[8px] font-bold text-slate-300 uppercase">-- DAY</p>
+            </div>
+            <div class="text-center bg-slate-50 px-3 py-1 rounded-full">
+                <span id="currentDateDisplay" class="text-[10px] font-black text-slate-900">--</span>
+            </div>
+            <div class="text-right">
+                <span id="sunsetTime" class="text-sm font-black text-indigo-600">--:--</span>
+                <p id="nightLengthValue" class="text-[8px] font-bold text-slate-300 uppercase">-- NIGHT</p>
+            </div>
         </div>
-        <input type="range" id="daySlider" min="1" max="365" value="1">
+
+        <div class="flex items-center gap-3">
+            <input type="range" id="daySlider" min="1" max="365" value="1">
+            <button id="resetToday" class="text-[9px] font-black text-indigo-600 bg-indigo-50 px-3 py-2 rounded-lg whitespace-nowrap">TODAY</button>
+        </div>
     </div>
 
     <script>
         (function () {
-            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.30;
+            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.32;
             const daySlider = document.getElementById('daySlider'), currentDateDisplay = document.getElementById('currentDateDisplay');
             const sunriseTimeDisplay = document.getElementById('sunriseTime'), sunsetTimeDisplay = document.getElementById('sunsetTime'), dayLengthValue = document.getElementById('dayLengthValue'), nightLengthValue = document.getElementById('nightLengthValue');
             const latitudeInput = document.getElementById('latitudeInput'), longitudeInput = document.getElementById('longitudeInput'), toggleDstButton = document.getElementById('toggleDstButton'), timeModeDisplay = document.getElementById('timeModeDisplay');
@@ -116,37 +117,37 @@
                 const times = getSunTimes(currentDay, parseFloat(latitudeInput.value), parseFloat(longitudeInput.value), isDst);
                 const d = new Date(), nowH = (d.getUTCHours() + d.getUTCMinutes() / 60 - 4 + (isDst ? 1 : 0) + 24) % 24;
                 
-                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 55; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
+                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 60; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
                 drawArc(times.dusk, times.dawn, '#0f172a'); drawArc(times.dawn, times.sunrise, '#6366f1'); drawArc(times.sunrise, times.sunset, '#fbbf24'); drawArc(times.sunset, times.dusk, '#6366f1');
 
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
-                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
-                // MAIN TIME
-                ctx.fillStyle = '#1e293b'; ctx.font = '900 48px Inter'; ctx.textAlign = 'center';
+                ctx.fillStyle = '#1e293b'; ctx.font = '900 52px Inter'; ctx.textAlign = 'center';
                 const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
                 
-                // MASSIVE HOURS LEFT FONT
+                // EXTRA LARGE HOURS LEFT
                 if (nowH >= times.sunrise && nowH < times.sunset) {
                     const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
-                    ctx.font = '900 22px Inter'; ctx.fillStyle = '#f59e0b';
-                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 50);
+                    ctx.font = '900 24px Inter'; ctx.fillStyle = '#f59e0b';
+                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 55);
                 } else {
-                    ctx.font = '900 22px Inter'; ctx.fillStyle = '#6366f1';
-                    ctx.fillText("NIGHT", centerX, centerY + 50);
+                    ctx.font = '900 24px Inter'; ctx.fillStyle = '#6366f1';
+                    ctx.fillText("NIGHT", centerX, centerY + 55);
                 }
                 
-                sunriseTimeDisplay.textContent = `${Math.floor(times.sunrise) % 12 || 12}:${String(Math.round((times.sunrise % 1) * 60)).padStart(2, '0')} ${times.sunrise >= 12 ? 'PM' : 'AM'}`;
-                sunsetTimeDisplay.textContent = `${Math.floor(times.sunset) % 12 || 12}:${String(Math.round((times.sunset % 1) * 60)).padStart(2, '0')} ${times.sunset >= 12 ? 'PM' : 'AM'}`;
+                const toClock = (h) => `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+                sunriseTimeDisplay.textContent = toClock(times.sunrise); 
+                sunsetTimeDisplay.textContent = toClock(times.sunset);
                 dayLengthValue.textContent = `${Math.floor(times.dayLen)}h ${Math.round((times.dayLen % 1) * 60)}m DAY`;
                 nightLengthValue.textContent = `${Math.floor(times.nightLen)}h ${Math.round((times.nightLen % 1) * 60)}m NIGHT`;
             }
 
             const update = () => {
                 currentDay = parseInt(daySlider.value);
-                currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
                 timeModeDisplay.textContent = isDst ? 'ON' : 'OFF';
                 drawClock();
             };
