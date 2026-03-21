@@ -17,51 +17,58 @@
             box-sizing: border-box; max-width: 420px; margin: 0 auto; 
         }
 
-        .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; margin-bottom: 10rem; }
+        /* Top Settings Bar */
+        .settings-bar {
+            max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
+            background: white; border-radius: 1rem; margin-top: 0.5rem;
+        }
+        .settings-bar.active { max-height: 200px; padding: 0.75rem; border: 1px solid #e2e8f0; margin-bottom: 0.5rem; }
+
+        .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; margin-bottom: 11rem; }
         
         canvas { 
-            max-width: 100%; max-height: 90%; width: auto !important; height: auto !important; 
-            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2rem; 
+            max-width: 100%; max-height: 95%; width: auto !important; height: auto !important; 
+            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2.5rem; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
         }
 
         .info-hub {
             position: fixed; bottom: calc(0.6rem + var(--safe-bottom)); left: 0.6rem; right: 0.6rem;
-            background: white; padding: 1.25rem; border-radius: 1.75rem; 
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.06); z-index: 50; border: 1px solid #f1f5f9;
+            background: white; padding: 1.25rem; border-radius: 2rem; 
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.08); z-index: 50; border: 1px solid #f1f5f9;
         }
 
         input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 24px; margin: 0.5rem 0; }
         input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #f1f5f9; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { 
-            -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%; 
-            background: #4f46e5; margin-top: -9px; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; 
+            background: #4f46e5; margin-top: -10px; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-
-        .settings-panel { 
-            display: none; position: absolute; top: 0; left: 0; right: 0; z-index: 100; 
-            background-color: #ffffff; padding: 1rem; border-radius: 1.5rem; border: 1px solid #e2e8f0;
-        }
-        .settings-panel.active { display: block; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="flex justify-between items-center px-2 mb-1">
+        <div class="flex justify-between items-center px-2">
             <h1 class="text-sm font-black text-slate-900 uppercase tracking-tighter">SolarCycle</h1>
-            <button id="settingsToggle" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100">⚙️</button>
+            <button id="settingsToggle" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100 active:bg-slate-50">⚙️</button>
+        </div>
+
+        <div id="settingsBar" class="settings-bar shadow-sm">
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="flex flex-col">
+                    <label class="text-[8px] font-black text-slate-400 uppercase ml-1 mb-1">Latitude</label>
+                    <input type="number" id="latitudeInput" value="45.27" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[8px] font-black text-slate-400 uppercase ml-1 mb-1">Longitude</label>
+                    <input type="number" id="longitudeInput" value="-66.06" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+                </div>
+            </div>
+            <button id="toggleDstButton" class="w-full py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Daylight Savings: <span id="timeModeDisplay">OFF</span></button>
         </div>
 
         <div class="visualizer-area">
-            <div id="settingsPanel" class="settings-panel shadow-2xl">
-                <div class="grid grid-cols-2 gap-2 mb-3">
-                    <input type="number" id="latitudeInput" value="45.27" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
-                    <input type="number" id="longitudeInput" value="-66.06" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
-                </div>
-                <button id="toggleDstButton" class="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase">DST: <span id="timeModeDisplay">OFF</span></button>
-                <button id="closeSettings" class="w-full mt-3 text-[10px] font-bold text-slate-300 uppercase">Dismiss</button>
-            </div>
             <canvas id="dayNightCanvas" width="600" height="600"></canvas>
         </div>
     </div>
@@ -69,38 +76,37 @@
     <div class="info-hub">
         <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
             <div class="text-left">
-                <span id="sunriseTime" class="text-xl font-black text-amber-500 tracking-tight">--:--</span>
-                <p id="dayLengthValue" class="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
+                <span id="sunriseTime" class="text-2xl font-black text-amber-500 tracking-tight">--:--</span>
+                <p id="dayLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
             </div>
             <div class="text-center bg-slate-100 px-3 py-1 rounded-full">
                 <span id="currentDateDisplay" class="text-[11px] font-black text-slate-600">--</span>
             </div>
             <div class="text-right">
-                <span id="sunsetTime" class="text-xl font-black text-indigo-600 tracking-tight">--:--</span>
-                <p id="nightLengthValue" class="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
+                <span id="sunsetTime" class="text-2xl font-black text-indigo-600 tracking-tight">--:--</span>
+                <p id="nightLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
             </div>
         </div>
 
         <div class="flex items-center gap-4">
             <input type="range" id="daySlider" min="1" max="365" value="1">
-            <button id="resetToday" class="text-[10px] font-black text-white bg-indigo-600 px-4 py-2.5 rounded-xl shadow-md uppercase active:scale-95 transition-transform">Today</button>
+            <button id="resetToday" class="text-[10px] font-black text-white bg-indigo-600 px-4 py-3 rounded-xl shadow-md uppercase active:scale-95">Today</button>
         </div>
     </div>
 
     <script>
         (function () {
-            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.33;
+            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.35;
             const daySlider = document.getElementById('daySlider'), currentDateDisplay = document.getElementById('currentDateDisplay');
             const sunriseTimeDisplay = document.getElementById('sunriseTime'), sunsetTimeDisplay = document.getElementById('sunsetTime'), dayLengthValue = document.getElementById('dayLengthValue'), nightLengthValue = document.getElementById('nightLengthValue');
             const latitudeInput = document.getElementById('latitudeInput'), longitudeInput = document.getElementById('longitudeInput'), toggleDstButton = document.getElementById('toggleDstButton'), timeModeDisplay = document.getElementById('timeModeDisplay');
-            const settingsToggle = document.getElementById('settingsToggle'), settingsPanel = document.getElementById('settingsPanel'), closeSettings = document.getElementById('closeSettings'), resetToday = document.getElementById('resetToday');
+            const settingsToggle = document.getElementById('settingsToggle'), settingsBar = document.getElementById('settingsBar'), resetToday = document.getElementById('resetToday');
 
             const now = new Date(), YEAR = now.getFullYear();
             const start = new Date(YEAR, 0, 0), todayOrdinal = Math.floor((now - start) / (1000 * 60 * 60 * 24));
             let currentDay = todayOrdinal, isDst = false;
 
-            settingsToggle.onclick = () => settingsPanel.classList.add('active');
-            closeSettings.onclick = () => settingsPanel.classList.remove('active');
+            settingsToggle.onclick = () => settingsBar.classList.toggle('active');
             resetToday.onclick = () => { daySlider.value = todayOrdinal; update(); };
 
             function getSunTimes(day, lat, lon, isDst) {
@@ -108,7 +114,7 @@
                 const times = SunCalc.getTimes(utcDate, lat, lon), offset = -4 + (isDst ? 1 : 0);
                 const toWall = (date) => (date && !isNaN(date.getTime())) ? (new Date(date.getTime() + (offset * 3600000)).getUTCHours() + new Date(date.getTime() + (offset * 3600000)).getUTCMinutes() / 60) : null;
                 const sunrise = toWall(times.sunrise) || toWall(times.dawn), sunset = toWall(times.sunset) || toWall(times.dusk);
-                return { sunrise, sunset, dayLen: (sunset - sunrise + 24) % 24, nightLen: 24 - ((sunset - sunrise + 24) % 24), dawn: toWall(times.dawn), dusk: toWall(times.dusk) };
+                return { sunrise, sunset, dayLen: (sunset - sunrise + 24) % 24, nightLen: 24 - ((sunset - sunrise + 24) % 24) };
             }
 
             function drawClock() {
@@ -116,23 +122,23 @@
                 const times = getSunTimes(currentDay, parseFloat(latitudeInput.value), parseFloat(longitudeInput.value), isDst);
                 const d = new Date(), nowH = (d.getUTCHours() + d.getUTCMinutes() / 60 - 4 + (isDst ? 1 : 0) + 24) % 24;
                 
-                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 65; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
-                drawArc(times.dusk, times.dawn, '#0f172a'); drawArc(times.dawn, times.sunrise, '#6366f1'); drawArc(times.sunrise, times.sunset, '#fbbf24'); drawArc(times.sunset, times.dusk, '#6366f1');
+                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 75; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
+                drawArc(times.sunset, times.sunrise, '#0f172a'); drawArc(times.sunrise, times.sunset, '#fbbf24');
 
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
-                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
-                ctx.fillStyle = '#1e293b'; ctx.font = '900 56px Inter'; ctx.textAlign = 'center';
+                ctx.fillStyle = '#1e293b'; ctx.font = '900 62px Inter'; ctx.textAlign = 'center';
                 const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
                 
                 if (nowH >= times.sunrise && nowH < times.sunset) {
                     const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
-                    ctx.font = '900 24px Inter'; ctx.fillStyle = '#f59e0b';
+                    ctx.font = '900 28px Inter'; ctx.fillStyle = '#f59e0b';
                     ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 55);
                 } else {
-                    ctx.font = '900 24px Inter'; ctx.fillStyle = '#6366f1';
+                    ctx.font = '900 28px Inter'; ctx.fillStyle = '#6366f1';
                     ctx.fillText("NIGHT", centerX, centerY + 55);
                 }
                 
