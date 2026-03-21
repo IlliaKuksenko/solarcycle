@@ -108,6 +108,7 @@
             const now = new Date(), YEAR = now.getFullYear();
             const start = new Date(YEAR, 0, 0), todayOrdinal = Math.floor((now - start) / (1000 * 60 * 60 * 24));
             
+            // Load from LocalStorage or use defaults
             let currentDay = todayOrdinal;
             let isDst = localStorage.getItem('solarDst') === 'true';
             latitudeInput.value = localStorage.getItem('solarLat') || "45.27";
@@ -129,29 +130,13 @@
                 const times = getSunTimes(currentDay, lat, lon, isDst);
                 const d = new Date(), nowH = (d.getUTCHours() + d.getUTCMinutes() / 60 - 4 + (isDst ? 1 : 0) + 24) % 24;
                 
-                // Draw Sun/Night Rings
                 const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 85; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
                 drawArc(times.sunset, times.sunrise, '#0f172a'); drawArc(times.sunrise, times.sunset, '#fbbf24');
 
-                // Draw Sun Trajectory Line
-                ctx.setLineDash([5, 10]); ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)'; ctx.lineWidth = 2; ctx.beginPath();
-                for (let i = 0; i <= 24; i += 0.5) {
-                    const testDate = new Date(Date.UTC(YEAR, 0, currentDay, i));
-                    const pos = SunCalc.getPosition(testDate, lat, lon);
-                    const altFactor = Math.max(0, Math.sin(pos.altitude));
-                    const r = CLOCK_RADIUS - (altFactor * 80);
-                    const x = centerX + r * Math.cos((i / 24) * 2 * Math.PI - Math.PI / 2);
-                    const y = centerY + r * Math.sin((i / 24) * 2 * Math.PI - Math.PI / 2);
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                }
-                ctx.stroke(); ctx.setLineDash([]);
-
-                // Draw Current Time Hand
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
                 ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
-                // Text Rendering
                 ctx.fillStyle = '#1e293b'; ctx.font = '900 76px Inter'; ctx.textAlign = 'center';
                 const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
@@ -176,9 +161,12 @@
                 currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
                 toggleDstButton.textContent = `DST: ${isDst ? 'ON' : 'OFF'}`;
                 timeModeDisplay.textContent = isDst ? 'DST Time' : 'STD Time';
+                
+                // Save settings
                 localStorage.setItem('solarLat', latitudeInput.value);
                 localStorage.setItem('solarLon', longitudeInput.value);
                 localStorage.setItem('solarDst', isDst);
+                
                 drawClock();
             };
 
