@@ -17,16 +17,17 @@
             box-sizing: border-box; max-width: 420px; margin: 0 auto; 
         }
 
-        /* Fixed Top Settings Section */
+        /* Fixed Top Settings (Always Visible) */
         .static-settings {
             background: white; border-radius: 1rem; padding: 0.75rem; 
-            border: 1px solid #f1f5f9; margin-top: 0.5rem; margin-bottom: 0.5rem;
+            border: 1px solid #f1f5f9; margin-top: 0.25rem; margin-bottom: 0.5rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
+        /* Dynamic Clock Area - Now fits available space */
         .visualizer-area { 
             flex: 1; display: flex; align-items: center; justify-content: center; 
-            min-height: 0; position: relative; margin-bottom: 11.5rem; /* Space for the floating hub */
+            min-height: 0; position: relative; width: 100%; padding: 0.5rem;
         }
         
         canvas { 
@@ -35,10 +36,11 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); 
         }
 
+        /* Adjusted Info Hub Position */
         .info-hub {
-            position: fixed; bottom: calc(0.6rem + var(--safe-bottom)); left: 0.6rem; right: 0.6rem;
+            position: relative; margin-top: auto; margin-bottom: calc(0.5rem + var(--safe-bottom));
             background: white; padding: 1.25rem; border-radius: 2rem; 
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.08); z-index: 50; border: 1px solid #f1f5f9;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.06); z-index: 50; border: 1px solid #f1f5f9;
         }
 
         input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 24px; margin: 0.5rem 0; }
@@ -60,45 +62,45 @@
             <div class="grid grid-cols-2 gap-3 mb-2.5">
                 <div class="flex flex-col">
                     <label class="text-[7px] font-black text-slate-300 uppercase ml-1 mb-1">Latitude</label>
-                    <input type="number" id="latitudeInput" value="45.27" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center text-slate-700">
+                    <input type="number" id="latitudeInput" value="45.27" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[7px] font-black text-slate-300 uppercase ml-1 mb-1">Longitude</label>
-                    <input type="number" id="longitudeInput" value="-66.06" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center text-slate-700">
+                    <input type="number" id="longitudeInput" value="-66.06" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
             </div>
-            <button id="toggleDstButton" class="w-full py-2 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest active:bg-slate-800">Daylight Savings: <span id="timeModeDisplay">OFF</span></button>
+            <button id="toggleDstButton" class="w-full py-2 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">Daylight Savings: <span id="timeModeDisplay">OFF</span></button>
         </div>
 
         <div class="visualizer-area">
             <canvas id="dayNightCanvas" width="600" height="600"></canvas>
         </div>
-    </div>
 
-    <div class="info-hub">
-        <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
-            <div class="text-left">
-                <span id="sunriseTime" class="text-2xl font-black text-amber-500 tracking-tight">--:--</span>
-                <p id="dayLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
+        <div class="info-hub">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
+                <div class="text-left">
+                    <span id="sunriseTime" class="text-2xl font-black text-amber-500 tracking-tight">--:--</span>
+                    <p id="dayLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
+                </div>
+                <div class="text-center bg-slate-100 px-3 py-1 rounded-full">
+                    <span id="currentDateDisplay" class="text-[11px] font-black text-slate-600">--</span>
+                </div>
+                <div class="text-right">
+                    <span id="sunsetTime" class="text-2xl font-black text-indigo-600 tracking-tight">--:--</span>
+                    <p id="nightLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
+                </div>
             </div>
-            <div class="text-center bg-slate-100 px-3 py-1 rounded-full">
-                <span id="currentDateDisplay" class="text-[11px] font-black text-slate-600">--</span>
-            </div>
-            <div class="text-right">
-                <span id="sunsetTime" class="text-2xl font-black text-indigo-600 tracking-tight">--:--</span>
-                <p id="nightLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
-            </div>
-        </div>
 
-        <div class="flex items-center gap-4">
-            <input type="range" id="daySlider" min="1" max="365" value="1">
-            <button id="resetToday" class="text-[10px] font-black text-white bg-indigo-600 px-4 py-3 rounded-xl shadow-md uppercase active:scale-95">Today</button>
+            <div class="flex items-center gap-4">
+                <input type="range" id="daySlider" min="1" max="365" value="1">
+                <button id="resetToday" class="text-[10px] font-black text-white bg-indigo-600 px-4 py-3 rounded-xl shadow-md uppercase">Today</button>
+            </div>
         </div>
     </div>
 
     <script>
         (function () {
-            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.36;
+            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.38;
             const daySlider = document.getElementById('daySlider'), currentDateDisplay = document.getElementById('currentDateDisplay');
             const sunriseTimeDisplay = document.getElementById('sunriseTime'), sunsetTimeDisplay = document.getElementById('sunsetTime'), dayLengthValue = document.getElementById('dayLengthValue'), nightLengthValue = document.getElementById('nightLengthValue');
             const latitudeInput = document.getElementById('latitudeInput'), longitudeInput = document.getElementById('longitudeInput'), toggleDstButton = document.getElementById('toggleDstButton'), timeModeDisplay = document.getElementById('timeModeDisplay'), resetToday = document.getElementById('resetToday');
@@ -122,24 +124,24 @@
                 const times = getSunTimes(currentDay, parseFloat(latitudeInput.value), parseFloat(longitudeInput.value), isDst);
                 const d = new Date(), nowH = (d.getUTCHours() + d.getUTCMinutes() / 60 - 4 + (isDst ? 1 : 0) + 24) % 24;
                 
-                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 80; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
+                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 85; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
                 drawArc(times.sunset, times.sunrise, '#0f172a'); drawArc(times.sunrise, times.sunset, '#fbbf24');
 
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
-                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
-                ctx.fillStyle = '#1e293b'; ctx.font = '900 68px Inter'; ctx.textAlign = 'center';
+                ctx.fillStyle = '#1e293b'; ctx.font = '900 74px Inter'; ctx.textAlign = 'center';
                 const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
                 
                 if (nowH >= times.sunrise && nowH < times.sunset) {
                     const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
-                    ctx.font = '900 30px Inter'; ctx.fillStyle = '#f59e0b';
-                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 60);
+                    ctx.font = '900 32px Inter'; ctx.fillStyle = '#f59e0b';
+                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
                 } else {
-                    ctx.font = '900 30px Inter'; ctx.fillStyle = '#6366f1';
-                    ctx.fillText("NIGHT", centerX, centerY + 60);
+                    ctx.font = '900 32px Inter'; ctx.fillStyle = '#6366f1';
+                    ctx.fillText("NIGHT", centerX, centerY + 65);
                 }
                 
                 const toClock = (h) => `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
