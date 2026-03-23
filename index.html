@@ -24,7 +24,7 @@
     <div class="app-container">
         <header class="flex justify-between items-center px-2 mb-1">
             <h1 class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">SolarCycle</h1>
-            <span id="tzDisplay" class="text-[8px] font-bold text-slate-400 uppercase">Local Solar Time</span>
+            <span class="text-[8px] font-bold text-slate-400 uppercase">Local Solar Time</span>
         </header>
 
         <section class="static-settings">
@@ -92,7 +92,6 @@
 
             const YEAR = new Date().getFullYear();
             const start = new Date(YEAR, 0, 0), todayOrdinal = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
-            let currentDay = todayOrdinal;
 
             const toSolarDecimal = (date, lon) => {
                 if (!date || isNaN(date.getTime())) return null;
@@ -100,40 +99,7 @@
                 return (utcHours + (lon / 15) + 24) % 24;
             };
 
-            const formatTime = (h) => h === null ? '--' : `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
-
-            function update() {
-                currentDay = parseInt(daySlider.value);
-                const date = new Date(Date.UTC(YEAR, 0, currentDay, 12));
-                currentDateDisplay.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-                
-                const lat = parseFloat(latitudeInput.value), lon = parseFloat(longitudeInput.value);
-                localStorage.setItem('solar-lat', lat); localStorage.setItem('solar-lon', lon);
-                
-                // Sun Data
-                const sTimes = SunCalc.getTimes(date, lat, lon);
-                const sun = {
-                    dawn: toSolarDecimal(sTimes.dawn, lon),
-                    sunrise: toSolarDecimal(sTimes.sunrise, lon),
-                    sunset: toSolarDecimal(sTimes.sunset, lon),
-                    night: toSolarDecimal(sTimes.night, lon)
-                };
-
-                // Moon Data
-                const mTimes = SunCalc.getMoonTimes(date, lat, lon);
-                const illum = SunCalc.getMoonIllumination(date);
-                
-                sunriseTimeDisplay.textContent = formatTime(sun.sunrise);
-                sunsetTimeDisplay.textContent = formatTime(sun.sunset);
-                moonriseDisplay.textContent = formatTime(toSolarDecimal(mTimes.rise, lon));
-                moonsetDisplay.textContent = formatTime(toSolarDecimal(mTimes.set, lon));
-                
-                const dayLen = (sun.sunset - sun.sunrise + 24) % 24;
-                dayLengthValue.textContent = `${Math.floor(dayLen)}h ${Math.round((dayLen % 1) * 60)}m DAY`;
-                nightLengthValue.textContent = `${Math.floor(24-dayLen)}h ${Math.round(((24-dayLen) % 1) * 60)}m NIGHT`;
-
-                drawClock(sun, illum, lon);
-            }
+            const formatTime = (h) => h === null ? '--:--' : `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
             function drawMoon(x, y, radius, illum) {
                 ctx.save(); ctx.translate(x, y); ctx.fillStyle = "#f1f5f9"; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
@@ -143,17 +109,55 @@
                 ctx.fill(); ctx.restore();
             }
 
-            function drawClock(sun, illum, lon) {
+            function update() {
+                const currentDay = parseInt(daySlider.value);
+                const date = new Date(Date.UTC(YEAR, 0, currentDay, 12));
+                currentDateDisplay.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                
+                const lat = parseFloat(latitudeInput.value), lon = parseFloat(longitudeInput.value);
+                localStorage.setItem('solar-lat', lat); localStorage.setItem('solar-lon', lon);
+                
+                const sTimes = SunCalc.getTimes(date, lat, lon);
+                const sun = {
+                    dawn: toSolarDecimal(sTimes.dawn, lon),
+                    sunrise: toSolarDecimal(sTimes.sunrise, lon),
+                    sunset: toSolarDecimal(sTimes.sunset, lon),
+                    night: toSolarDecimal(sTimes.night, lon)
+                };
+
+                const mTimes = SunCalc.getMoonTimes(date, lat, lon);
+                const illum = SunCalc.getMoonIllumination(date);
+                
+                sunriseTimeDisplay.textContent = formatTime(sun.sunrise);
+                sunsetTimeDisplay.textContent = formatTime(sun.sunset);
+                moonriseDisplay.textContent = formatTime(toSolarDecimal(mTimes.rise, lon));
+                moonsetDisplay.textContent = formatTime(toSolarDecimal(mTimes.set, lon));
+                
+                if (sun.sunrise !== null) {
+                    const dL = (sun.sunset - sun.sunrise + 24) % 24;
+                    dayLengthValue.textContent = `${Math.floor(dL)}h ${Math.round((dL % 1) * 60)}m DAY`;
+                    nightLengthValue.textContent = `${Math.floor(24-dL)}h ${Math.round(((24-dL) % 1) * 60)}m NIGHT`;
+                }
+
+                // --- CLEAR AND DRAW ---
                 ctx.clearRect(0, 0, W, H);
                 const now = new Date();
                 const nowSolarH = (now.getUTCHours() + now.getUTCMinutes() / 60 + (lon / 15) + 24) % 24;
 
-                const drawArc = (s, e, color) => { ctx.strokeStyle = color; ctx.lineWidth = 85; ctx.beginPath(); ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); ctx.stroke(); };
+                const drawArc = (s, e, color) => { 
+                    ctx.strokeStyle = color; ctx.lineWidth = 85; ctx.beginPath(); 
+                    ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); 
+                    ctx.stroke(); 
+                };
                 
                 drawArc(0, 24, COLORS.night); 
-                if (sun.sunrise) { drawArc(sun.dawn, sun.sunrise, COLORS.twilight); drawArc(sun.sunset, sun.night, COLORS.twilight); drawArc(sun.sunrise, sun.sunset, COLORS.day); }
+                if (sun.sunrise !== null) { 
+                    drawArc(sun.dawn, sun.sunrise, COLORS.twilight); 
+                    drawArc(sun.sunset, sun.night, COLORS.twilight); 
+                    drawArc(sun.sunrise, sun.sunset, COLORS.day); 
+                }
 
-                // Indicators
+                // Numbers
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 for (let i = 0; i < 24; i++) {
                     const angle = (i / 24) * 2 * Math.PI - Math.PI / 2, textR = CLOCK_RADIUS + 65, x = centerX + textR * Math.cos(angle), y = centerY + textR * Math.sin(angle);
@@ -164,14 +168,13 @@
 
                 drawMoon(centerX, centerY + 115, 12, illum);
                 
-                const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
-                const handP = timeToPolar(nowSolarH, CLOCK_RADIUS - 20);
+                const handP = { x: centerX + (CLOCK_RADIUS - 20) * Math.cos((nowSolarH / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + (CLOCK_RADIUS - 20) * Math.sin((nowSolarH / 24) * 2 * Math.PI - Math.PI / 2) };
                 ctx.strokeStyle = COLORS.hand; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
                 ctx.fillStyle = COLORS.textMain; ctx.font = '900 74px Inter';
                 ctx.fillText(`${Math.floor(nowSolarH) % 12 || 12}:${String(Math.floor((nowSolarH % 1) * 60)).padStart(2, '0')}`, centerX, centerY - 10);
                 
-                if (sun.sunrise) {
+                if (sun.sunrise !== null) {
                     ctx.font = '900 32px Inter';
                     if (nowSolarH >= sun.sunrise && nowSolarH < sun.sunset) {
                         const r = sun.sunset - nowSolarH;
