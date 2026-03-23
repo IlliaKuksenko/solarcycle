@@ -127,11 +127,10 @@
                 };
 
                 return {
+                    dawn: toWall(times.dawn), // Morning Twilight Begins
                     sunrise: toWall(times.sunrise),
                     sunset: toWall(times.sunset),
-                    dusk: toWall(times.dusk), // Civil Twilight Ends
-                    nauticalDusk: toWall(times.nauticalDusk), // Nautical Ends
-                    night: toWall(times.night), // Astronomical Ends
+                    night: toWall(times.night), // Evening Twilight Ends
                     dayLen: (toWall(times.sunset) - toWall(times.sunrise) + 24) % 24,
                     nightLen: 24 - ((toWall(times.sunset) - toWall(times.sunrise) + 24) % 24)
                 };
@@ -149,10 +148,15 @@
                     ctx.stroke(); 
                 };
                 
-                // Order matters for layering
-                drawArc(0, 24, '#0f172a'); // Base Night
-                drawArc(times.sunset, times.night, '#4f46e5'); // Twilight/Blue Hour
-                drawArc(times.sunrise, times.sunset, '#fbbf24'); // Sunlight
+                // Base Background (Midnight Sky)
+                drawArc(0, 24, '#0f172a'); 
+
+                // Twilight Periods (Indigo)
+                drawArc(times.dawn, times.sunrise, '#4f46e5'); // Dawn
+                drawArc(times.sunset, times.night, '#4f46e5'); // Dusk
+
+                // Sunlight (Yellow)
+                drawArc(times.sunrise, times.sunset, '#fbbf24'); 
 
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
@@ -167,7 +171,7 @@
                 if (nowH >= times.sunrise && nowH < times.sunset) {
                     const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
                     ctx.fillStyle = '#f59e0b'; ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
-                } else if (nowH >= times.sunset && nowH < times.night) {
+                } else if ((nowH >= times.dawn && nowH < times.sunrise) || (nowH >= times.sunset && nowH < times.night)) {
                     ctx.fillStyle = '#6366f1'; ctx.fillText("TWILIGHT", centerX, centerY + 65);
                 } else {
                     ctx.fillStyle = '#94a3b8'; ctx.fillText("NIGHT", centerX, centerY + 65);
