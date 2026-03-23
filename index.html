@@ -127,10 +127,10 @@
                 };
 
                 return {
-                    dawn: toWall(times.dawn), // Morning Twilight Begins
+                    dawn: toWall(times.dawn),
                     sunrise: toWall(times.sunrise),
                     sunset: toWall(times.sunset),
-                    night: toWall(times.night), // Evening Twilight Ends
+                    night: toWall(times.night),
                     dayLen: (toWall(times.sunset) - toWall(times.sunrise) + 24) % 24,
                     nightLen: 24 - ((toWall(times.sunset) - toWall(times.sunrise) + 24) % 24)
                 };
@@ -148,22 +148,41 @@
                     ctx.stroke(); 
                 };
                 
-                // Base Background (Midnight Sky)
+                // Base 24h background
                 drawArc(0, 24, '#0f172a'); 
-
-                // Twilight Periods (Indigo)
-                drawArc(times.dawn, times.sunrise, '#4f46e5'); // Dawn
-                drawArc(times.sunset, times.night, '#4f46e5'); // Dusk
-
-                // Sunlight (Yellow)
+                drawArc(times.dawn, times.sunrise, '#4f46e5');
+                drawArc(times.sunset, times.night, '#4f46e5');
                 drawArc(times.sunrise, times.sunset, '#fbbf24'); 
+
+                // --- NEW: Time Indicators ---
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                for (let i = 0; i < 24; i++) {
+                    const angle = (i / 24) * 2 * Math.PI - Math.PI / 2;
+                    // Position numbers slightly outside the main ring
+                    const textR = CLOCK_RADIUS + 65;
+                    const x = centerX + textR * Math.cos(angle);
+                    const y = centerY + textR * Math.sin(angle);
+                    
+                    ctx.font = 'bold 14px Inter';
+                    ctx.fillStyle = (i === 0 || i === 12) ? '#1e293b' : '#94a3b8';
+                    
+                    // Show numbers for key hours, dots for others to avoid clutter
+                    if (i % 3 === 0) {
+                        ctx.fillText(i === 0 ? '24' : i, x, y);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
 
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
                 
                 ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
-                ctx.fillStyle = '#1e293b'; ctx.font = '900 74px Inter'; ctx.textAlign = 'center';
+                ctx.fillStyle = '#1e293b'; ctx.font = '900 74px Inter';
                 const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
                 
