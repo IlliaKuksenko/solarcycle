@@ -3,569 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SolarCycle</title>
-    <script src="https://cdn.tailwindcss.com" integrity="sha384-QWLvtQZt5F6jxnf+tTK15tqQ05dvJkssCWqxWXq7qkqtQyQD5E29fqXe8BA+b9SPb" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js" integrity="sha384-hPqMltykc0+jLnEcAxF4y6XwZr4PE1p2LSjRIXHLHaAVJZZJ94du+HvD4/QUt+v1" crossorigin="anonymous"></script>
+    <title>SolarCycle Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
+        html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100vh; width: 100%; overflow: hidden; }
         
-        :root {
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
-            /* Color Palette */
-            --color-midnight: #0f172a;
-            --color-twilight: #4f46e5;
-            --color-sunlight: #fbbf24;
-            --color-text-primary: #1e293b;
-            --color-text-secondary: #94a3b8;
-            --color-border: #f1f5f9;
-        }
-        
-        html, body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100%;
-            overflow: hidden;
-        }
-        
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 0.5rem;
-            padding-top: calc(0.2rem + var(--safe-top));
-            box-sizing: border-box;
-            max-width: 420px;
-            margin: 0 auto;
+        .app-container { 
+            display: flex; flex-direction: column; height: 100%; 
+            padding: 0.5rem; padding-top: calc(0.2rem + var(--safe-top)); 
+            box-sizing: border-box; max-width: 420px; margin: 0 auto;
             justify-content: flex-start;
         }
 
         .static-settings {
-            background: white;
-            border-radius: 1rem;
-            padding: 0.6rem;
-            border: 1px solid var(--color-border);
-            margin-bottom: 0.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            background: white; border-radius: 1rem; padding: 0.6rem; 
+            border: 1px solid #f1f5f9; margin-bottom: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
-        .visualizer-area {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-bottom: 0.5rem;
-            max-height: 45vh;
+        .visualizer-area { 
+            display: flex; align-items: center; justify-content: center; 
+            width: 100%; margin-bottom: 0.5rem; max-height: 45vh; 
         }
-
-        canvas {
-            height: 100% !important;
-            width: auto !important;
-            aspect-ratio: 1 / 1;
-            background-color: #ffffff;
-            border-radius: 2rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        
+        canvas { 
+            height: 100% !important; width: auto !important;
+            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2rem; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); 
         }
 
         .info-hub {
-            background: white;
-            padding: 0.85rem 1rem;
-            border-radius: 1.75rem;
-            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.06);
-            border: 1px solid var(--color-border);
+            background: white; padding: 0.85rem 1rem; border-radius: 1.75rem; 
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9;
             margin-bottom: calc(0.5rem + var(--safe-bottom));
         }
 
-        /* Range Input Styling */
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            background: var(--color-border);
-            border-radius: 10px;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: var(--color-twilight);
-            margin-top: -9px;
-            border: 3px solid white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            cursor: pointer;
-        }
-
-        /* Firefox Range Styling */
-        input[type="range"]::-moz-range-track {
-            background: var(--color-border);
-            border-radius: 10px;
-            height: 6px;
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            background: var(--color-twilight);
-            border: 3px solid white;
-            border-radius: 50%;
-            height: 24px;
-            width: 24px;
-            cursor: pointer;
-        }
-
-        /* Error State */
-        .error-state {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .input-invalid {
-            border-color: #ef4444 !important;
-            background-color: #fee2e2 !important;
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
+        input[type="range"]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; 
+            background: #4f46e5; margin-top: -9px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="flex justify-between items-center px-2 mb-1">
+        <header class="flex justify-between items-center px-2 mb-1">
             <h1 class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">SolarCycle</h1>
-            <span id="tzDisplay" class="text-[8px] font-bold text-slate-400 uppercase" role="status" aria-live="polite">Detecting TZ...</span>
-        </div>
+            <span id="tzDisplay" class="text-[8px] font-bold text-slate-400 uppercase" aria-live="polite">Detecting TZ...</span>
+        </header>
 
-        <div class="static-settings">
+        <section class="static-settings">
             <div class="flex gap-2 items-end">
                 <div class="flex-1">
                     <label for="latitudeInput" class="text-[7px] font-black text-slate-300 uppercase ml-1">Lat</label>
-                    <input
-                        type="number"
-                        id="latitudeInput"
-                        value="45.27"
-                        min="-90"
-                        max="90"
-                        step="0.01"
-                        aria-label="Latitude"
-                        aria-describedby="latError"
-                        class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center"
-                    >
-                    <span id="latError" class="text-[6px] text-red-500" role="alert"></span>
+                    <input type="number" id="latitudeInput" value="45.27" min="-90" max="90" step="0.01" class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex-1">
                     <label for="longitudeInput" class="text-[7px] font-black text-slate-300 uppercase ml-1">Lon</label>
-                    <input
-                        type="number"
-                        id="longitudeInput"
-                        value="-66.06"
-                        min="-180"
-                        max="180"
-                        step="0.01"
-                        aria-label="Longitude"
-                        aria-describedby="lonError"
-                        class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center"
-                    >
-                    <span id="lonError" class="text-[6px] text-red-500" role="alert"></span>
+                    <input type="number" id="longitudeInput" value="-66.06" min="-180" max="180" step="0.01" class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex-1">
-                    <button
-                        id="resetToday"
-                        aria-label="Sync to today's date"
-                        class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase hover:bg-slate-800 transition-colors"
-                    >
-                        Sync Today
-                    </button>
+                    <button id="resetToday" class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase active:scale-95 transition-transform">Sync Today</button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="visualizer-area">
+        <main class="visualizer-area">
             <canvas id="dayNightCanvas" width="600" height="600" aria-label="24-hour sun cycle visualization"></canvas>
-        </div>
+        </main>
 
-        <div class="info-hub">
+        <footer class="info-hub">
             <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-50">
                 <div class="text-left">
-                    <span id="sunriseTime" class="text-xl font-black text-amber-500 tracking-tight" aria-label="Sunrise time">--:--</span>
+                    <time id="sunriseTime" class="text-xl font-black text-amber-500 tracking-tight">--:--</time>
                     <p id="dayLengthValue" class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
                 </div>
                 <div class="text-center bg-slate-100 px-2 py-0.5 rounded-full">
                     <span id="currentDateDisplay" class="text-[9px] font-black text-slate-600">--</span>
                 </div>
                 <div class="text-right">
-                    <span id="sunsetTime" class="text-xl font-black text-indigo-600 tracking-tight" aria-label="Sunset time">--:--</span>
+                    <time id="sunsetTime" class="text-xl font-black text-indigo-600 tracking-tight">--:--</time>
                     <p id="nightLengthValue" class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-3">
-                <input
-                    type="range"
-                    id="daySlider"
-                    min="1"
-                    max="365"
-                    value="1"
-                    aria-label="Day of year selector"
-                    class="flex-1"
-                >
-                <div id="statusIndicator" class="text-[9px] font-black text-indigo-600 uppercase" aria-live="polite">Live</div>
+                <input type="range" id="daySlider" min="1" max="365" value="1" aria-label="Select day of the year" class="flex-1">
+                <div id="statusIndicator" class="text-[9px] font-black text-indigo-600 uppercase">Live</div>
             </div>
-        </div>
+        </footer>
     </div>
 
     <script>
-        /**
-         * SolarCycle - 24-hour sun cycle visualization
-         * Uses SunCalc library to calculate sunrise/sunset times
-         */
         (function () {
-            // Canvas Setup
-            const canvas = document.getElementById('dayNightCanvas');
-            const ctx = canvas.getContext('2d');
-            const W = canvas.width;
-            const H = canvas.height;
-            const centerX = W / 2;
-            const centerY = H / 2;
-            const CLOCK_RADIUS = H * 0.38;
+            // --- CONSTANTS ---
+            const COLORS = { day: '#fbbf24', twilight: '#4f46e5', night: '#0f172a', hand: '#ef4444', textMain: '#1e293b', textSec: '#94a3b8' };
+            const canvas = document.getElementById('dayNightCanvas'), ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height, centerX = W / 2, centerY = H / 2, CLOCK_RADIUS = H * 0.38;
+            
+            const daySlider = document.getElementById('daySlider'), currentDateDisplay = document.getElementById('currentDateDisplay');
+            const sunriseTimeDisplay = document.getElementById('sunriseTime'), sunsetTimeDisplay = document.getElementById('sunsetTime');
+            const dayLengthValue = document.getElementById('dayLengthValue'), nightLengthValue = document.getElementById('nightLengthValue');
+            const latitudeInput = document.getElementById('latitudeInput'), longitudeInput = document.getElementById('longitudeInput');
+            const tzDisplay = document.getElementById('tzDisplay'), resetToday = document.getElementById('resetToday');
 
-            // DOM Elements
-            const daySlider = document.getElementById('daySlider');
-            const currentDateDisplay = document.getElementById('currentDateDisplay');
-            const sunriseTimeDisplay = document.getElementById('sunriseTime');
-            const sunsetTimeDisplay = document.getElementById('sunsetTime');
-            const dayLengthValue = document.getElementById('dayLengthValue');
-            const nightLengthValue = document.getElementById('nightLengthValue');
-            const latitudeInput = document.getElementById('latitudeInput');
-            const longitudeInput = document.getElementById('longitudeInput');
-            const tzDisplay = document.getElementById('tzDisplay');
-            const resetToday = document.getElementById('resetToday');
-            const statusIndicator = document.getElementById('statusIndicator');
-
-            // Color Constants
-            const COLORS = {
-                MIDNIGHT: '#0f172a',
-                TWILIGHT: '#4f46e5',
-                SUNLIGHT: '#fbbf24',
-                TIME_HAND: '#ef4444',
-                TEXT_PRIMARY: '#1e293b',
-                TEXT_SECONDARY: '#94a3b8',
-                DAYLIGHT_TEXT: '#f59e0b',
-                TWILIGHT_TEXT: '#6366f1'
-            };
-
-            // Date Constants
             const YEAR = new Date().getFullYear();
-            const start = new Date(YEAR, 0, 0);
-            const todayOrdinal = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
+            const start = new Date(YEAR, 0, 0), todayOrdinal = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
             let currentDay = todayOrdinal;
 
-            // Cached timezone offset
-            let cachedOffset = null;
-            let lastUpdateTime = 0;
-            const UPDATE_INTERVAL_MS = 60000; // Update timezone every 60 seconds
-
-            /**
-             * Validate latitude value
-             */
-            const validateLatitude = (lat) => lat >= -90 && lat <= 90;
-
-            /**
-             * Validate longitude value
-             */
-            const validateLongitude = (lon) => lon >= -180 && lon <= 180;
-
-            /**
-             * Display validation error for latitude
-             */
-            const showLatError = (message) => {
-                const errorEl = document.getElementById('latError');
-                errorEl.textContent = message;
-                latitudeInput.classList.add('input-invalid');
+            // --- PERSISTENCE & INITIALIZATION ---
+            const loadPreferences = () => {
+                const lat = localStorage.getItem('solar-lat');
+                const lon = localStorage.getItem('solar-lon');
+                if (lat) latitudeInput.value = lat;
+                if (lon) longitudeInput.value = lon;
             };
 
-            /**
-             * Display validation error for longitude
-             */
-            const showLonError = (message) => {
-                const errorEl = document.getElementById('lonError');
-                errorEl.textContent = message;
-                longitudeInput.classList.add('input-invalid');
-            };
+            const getLocalOffset = () => -(new Date().getTimezoneOffset() / 60);
 
-            /**
-             * Clear validation errors
-             */
-            const clearErrors = () => {
-                document.getElementById('latError').textContent = '';
-                document.getElementById('lonError').textContent = '';
-                latitudeInput.classList.remove('input-invalid');
-                longitudeInput.classList.remove('input-invalid');
-            };
+            resetToday.onclick = () => { daySlider.value = todayOrdinal; update(); };
 
-            /**
-             * Get local timezone offset (cached for performance)
-             */
-            const getLocalOffset = () => {
-                const now = Date.now();
-                if (cachedOffset === null || (now - lastUpdateTime) > UPDATE_INTERVAL_MS) {
-                    cachedOffset = -(new Date().getTimezoneOffset() / 60);
-                    lastUpdateTime = now;
-                }
-                return cachedOffset;
-            };
-
-            /**
-             * Calculate sunrise, sunset, and twilight times for a given day
-             */
+            // --- CORE LOGIC ---
             function getSunTimes(day, lat, lon) {
                 try {
-                    // Validate inputs
-                    if (!validateLatitude(lat) || !validateLongitude(lon)) {
-                        throw new Error('Invalid latitude or longitude');
-                    }
-
                     const utcDate = new Date(Date.UTC(YEAR, 0, day, 12));
                     const times = SunCalc.getTimes(utcDate, lat, lon);
                     const offset = getLocalOffset();
-
-                    /**
-                     * Convert UTC date to local wall clock time in 24-hour format
-                     */
+                    
                     const toWall = (date) => {
                         if (!date || isNaN(date.getTime())) return null;
                         const localDate = new Date(date.getTime() + (offset * 3600000));
                         return localDate.getUTCHours() + localDate.getUTCMinutes() / 60;
                     };
 
-                    const dawn = toWall(times.dawn);
-                    const sunrise = toWall(times.sunrise);
-                    const sunset = toWall(times.sunset);
-                    const night = toWall(times.night);
-
-                    // Validate calculations
-                    if (dawn === null || sunrise === null || sunset === null || night === null) {
-                        throw new Error('Failed to calculate sun times');
-                    }
-
-                    return {
-                        dawn,
-                        sunrise,
-                        sunset,
-                        night,
-                        dayLen: (sunset - sunrise + 24) % 24,
-                        nightLen: 24 - ((sunset - sunrise + 24) % 24)
+                    const sun = {
+                        dawn: toWall(times.dawn), sunrise: toWall(times.sunrise),
+                        sunset: toWall(times.sunset), night: toWall(times.night)
                     };
-                } catch (error) {
-                    console.error('Error calculating sun times:', error);
-                    return null;
-                }
+
+                    if (!sun.sunrise || !sun.sunset) return null; // Handle polar extremes
+
+                    sun.dayLen = (sun.sunset - sun.sunrise + 24) % 24;
+                    sun.nightLen = 24 - sun.dayLen;
+                    return sun;
+                } catch (e) { return null; }
             }
 
-            /**
-             * Convert hour value (0-24) to canvas position
-             */
-            const timeToPolar = (h, r) => ({
-                x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2),
-                y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2)
-            });
-
-            /**
-             * Draw an arc on the canvas
-             */
-            const drawArc = (s, e, color) => {
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 85;
-                ctx.beginPath();
-                ctx.arc(
-                    centerX,
-                    centerY,
-                    CLOCK_RADIUS,
-                    (s / 24 * 2 * Math.PI) - Math.PI / 2,
-                    (e / 24 * 2 * Math.PI) - Math.PI / 2
-                );
-                ctx.stroke();
-            };
-
-            /**
-             * Format time value to 12-hour AM/PM format
-             */
-            const formatTime = (h) => {
-                const hDisp = Math.floor(h) % 12 || 12;
-                const mDisp = String(Math.round((h % 1) * 60)).padStart(2, '0');
-                const ampm = h >= 12 ? 'PM' : 'AM';
-                return `${hDisp}:${mDisp} ${ampm}`;
-            };
-
-            /**
-             * Format duration to hours and minutes
-             */
-            const formatDuration = (h) => {
-                const hours = Math.floor(h);
-                const minutes = Math.round((h % 1) * 60);
-                return `${hours}h ${minutes}m`;
-            };
-
-            /**
-             * Draw the 24-hour clock visualization
-             */
             function drawClock() {
-                ctx.clearRect(0, 0, W, H);
-
                 const lat = parseFloat(latitudeInput.value);
                 const lon = parseFloat(longitudeInput.value);
+                
+                // VALIDATION: Prevent drawing if coords are outside logical bounds
+                if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return;
+
+                ctx.clearRect(0, 0, W, H);
                 const times = getSunTimes(currentDay, lat, lon);
-
-                if (!times) {
-                    console.warn('Could not render clock due to invalid sun times');
-                    return;
-                }
-
                 const now = new Date();
                 const nowH = now.getHours() + now.getMinutes() / 60;
+                
+                const drawArc = (s, e, color) => { 
+                    ctx.strokeStyle = color; ctx.lineWidth = 85; ctx.beginPath(); 
+                    ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); 
+                    ctx.stroke(); 
+                };
+                
+                if (times) {
+                    drawArc(0, 24, COLORS.night); 
+                    drawArc(times.dawn, times.sunrise, COLORS.twilight);
+                    drawArc(times.sunset, times.night, COLORS.twilight);
+                    drawArc(times.sunrise, times.sunset, COLORS.day); 
+                } else {
+                    // Fallback for 24h day/night
+                    drawArc(0, 24, lat > 0 ? COLORS.day : COLORS.night);
+                }
 
-                // Draw time arcs
-                drawArc(0, 24, COLORS.MIDNIGHT);
-                drawArc(times.dawn, times.sunrise, COLORS.TWILIGHT);
-                drawArc(times.sunset, times.night, COLORS.TWILIGHT);
-                drawArc(times.sunrise, times.sunset, COLORS.SUNLIGHT);
-
-                // Draw hour markers (0-23, with special styling for 0 and 12)
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-
+                // Time Indicators (Hours)
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 for (let i = 0; i < 24; i++) {
                     const angle = (i / 24) * 2 * Math.PI - Math.PI / 2;
                     const textR = CLOCK_RADIUS + 65;
                     const x = centerX + textR * Math.cos(angle);
                     const y = centerY + textR * Math.sin(angle);
-
                     ctx.font = 'bold 14px Inter';
-                    ctx.fillStyle = (i === 0 || i === 12) ? COLORS.TEXT_PRIMARY : COLORS.TEXT_SECONDARY;
-
-                    // Show numbers every 3 hours, dots for others
-                    if (i % 3 === 0) {
-                        ctx.fillText(i === 0 ? '24' : i, x, y);
-                    } else {
-                        ctx.beginPath();
-                        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
+                    ctx.fillStyle = (i % 3 === 0) ? COLORS.textMain : COLORS.textSec;
+                    if (i % 3 === 0) ctx.fillText(i === 0 ? '24' : i, x, y);
+                    else { ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.fill(); }
                 }
 
-                // Draw current time hand
+                const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
-                ctx.strokeStyle = COLORS.TIME_HAND;
-                ctx.lineWidth = 14;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.lineTo(handP.x, handP.y);
-                ctx.stroke();
-
-                // Draw current time display
-                ctx.fillStyle = COLORS.TEXT_PRIMARY;
-                ctx.font = '900 74px Inter';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-
-                const hDisp = Math.floor(nowH);
-                const mDisp = Math.floor((nowH % 1) * 60);
+                
+                ctx.strokeStyle = COLORS.hand; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
+                
+                ctx.fillStyle = COLORS.textMain; ctx.font = '900 74px Inter';
+                const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
-
-                // Draw status text
+                
                 ctx.font = '900 32px Inter';
-                if (nowH >= times.sunrise && nowH < times.sunset) {
-                    const hoursLeft = times.sunset - nowH;
-                    const rH = Math.floor(hoursLeft);
-                    const rM = Math.floor((hoursLeft % 1) * 60);
-                    ctx.fillStyle = COLORS.DAYLIGHT_TEXT;
-                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
-                } else if ((nowH >= times.dawn && nowH < times.sunrise) || (nowH >= times.sunset && nowH < times.night)) {
-                    ctx.fillStyle = COLORS.TWILIGHT_TEXT;
-                    ctx.fillText('TWILIGHT', centerX, centerY + 65);
-                } else {
-                    ctx.fillStyle = COLORS.TEXT_SECONDARY;
-                    ctx.fillText('NIGHT', centerX, centerY + 65);
+                if (times) {
+                    if (nowH >= times.sunrise && nowH < times.sunset) {
+                        const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
+                        ctx.fillStyle = '#f59e0b'; ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
+                    } else if ((nowH >= times.dawn && nowH < times.sunrise) || (nowH >= times.sunset && nowH < times.night)) {
+                        ctx.fillStyle = COLORS.twilight; ctx.fillText("TWILIGHT", centerX, centerY + 65);
+                    } else {
+                        ctx.fillStyle = COLORS.textSec; ctx.fillText("NIGHT", centerX, centerY + 65);
+                    }
+                    
+                    const formatTime = (h) => `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+                    sunriseTimeDisplay.textContent = formatTime(times.sunrise); 
+                    sunsetTimeDisplay.textContent = formatTime(times.sunset);
+                    dayLengthValue.textContent = `${Math.floor(times.dayLen)}h ${Math.round((times.dayLen % 1) * 60)}m DAY`;
+                    nightLengthValue.textContent = `${Math.floor(times.nightLen)}h ${Math.round((times.nightLen % 1) * 60)}m NIGHT`;
                 }
-
-                // Update info display
-                sunriseTimeDisplay.textContent = formatTime(times.sunrise);
-                sunsetTimeDisplay.textContent = formatTime(times.sunset);
-                dayLengthValue.textContent = `${formatDuration(times.dayLen)} DAY`;
-                nightLengthValue.textContent = `${formatDuration(times.nightLen)} NIGHT`;
             }
 
-            /**
-             * Update all displays and redraw
-             */
             const update = () => {
-                clearErrors();
-
-                const lat = parseFloat(latitudeInput.value);
-                const lon = parseFloat(longitudeInput.value);
-
-                // Validate inputs
-                if (isNaN(lat)) {
-                    showLatError('Invalid number');
-                    return;
-                }
-                if (isNaN(lon)) {
-                    showLonError('Invalid number');
-                    return;
-                }
-                if (!validateLatitude(lat)) {
-                    showLatError('Must be -90 to 90');
-                    return;
-                }
-                if (!validateLongitude(lon)) {
-                    showLonError('Must be -180 to 180');
-                    return;
-                }
-
                 currentDay = parseInt(daySlider.value);
-                const displayDate = new Date(YEAR, 0, currentDay);
-                currentDateDisplay.textContent = displayDate.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                }).toUpperCase();
-
+                currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                
                 const offset = getLocalOffset();
-                tzDisplay.textContent = `UTC ${offset >= 0 ? '+' : ''}${Math.round(offset * 10) / 10}`;
-
+                tzDisplay.textContent = `UTC ${offset >= 0 ? '+' : ''}${offset}`;
+                
+                // Save coordinates to localStorage
+                localStorage.setItem('solar-lat', latitudeInput.value);
+                localStorage.setItem('solar-lon', longitudeInput.value);
+                
                 drawClock();
             };
 
-            // Event listeners
-            resetToday.onclick = () => {
-                daySlider.value = todayOrdinal;
-                update();
-            };
-
-            [daySlider, latitudeInput, longitudeInput].forEach(element => {
-                element.addEventListener('input', update);
-            });
-
-            // Initialize on page load
-            window.addEventListener('load', () => {
-                daySlider.value = todayOrdinal;
-                update();
-                // Redraw every 30 seconds to update time hand
-                setInterval(drawClock, 30000);
-            });
-
-            // Update timezone display when page comes into focus
-            window.addEventListener('focus', () => {
-                cachedOffset = null;
-                update();
-            });
+            [daySlider, latitudeInput, longitudeInput].forEach(e => e.oninput = update);
+            window.onload = () => { loadPreferences(); daySlider.value = todayOrdinal; update(); setInterval(drawClock, 60000); };
         })();
     </script>
 </body>
