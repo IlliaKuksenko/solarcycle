@@ -9,38 +9,39 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
-        html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100vh; overflow: hidden; position: fixed; width: 100%; }
+        html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100vh; width: 100%; overflow: hidden; }
         
+        /* The container now centers the content vertically to remove gaps */
         .app-container { 
             display: flex; flex-direction: column; height: 100%; 
             padding: 0.5rem; padding-top: calc(0.2rem + var(--safe-top)); 
-            box-sizing: border-box; max-width: 420px; margin: 0 auto; 
+            box-sizing: border-box; max-width: 420px; margin: 0 auto;
+            justify-content: flex-start; /* Aligns content to top, we'll use small margins to gap them */
         }
 
-        /* Compact Top Settings */
         .static-settings {
             background: white; border-radius: 1rem; padding: 0.6rem; 
-            border: 1px solid #f1f5f9; margin-bottom: 0.4rem;
+            border: 1px solid #f1f5f9; margin-bottom: 0.5rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
-        /* FLEX 1: This area shrinks to fit available space */
+        /* Fixed: Reduced gaps by removing flex-1 and setting a tighter margin */
         .visualizer-area { 
-            flex: 1; display: flex; align-items: center; justify-content: center; 
-            min-height: 0; position: relative; width: 100%; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; 
+            width: 100%; margin-bottom: 0.5rem;
+            max-height: 45vh; /* Prevents the clock from stretching the page */
         }
         
         canvas { 
-            max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; 
-            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2.25rem; 
+            height: 100% !important; width: auto !important;
+            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2rem; 
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); 
         }
 
-        /* Slim Bottom Hub */
         .info-hub {
             background: white; padding: 0.85rem 1rem; border-radius: 1.75rem; 
             box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9;
-            margin-bottom: calc(0.5rem + var(--safe-bottom)); margin-top: 0.25rem;
+            margin-bottom: calc(0.5rem + var(--safe-bottom));
         }
 
         input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; }
@@ -70,7 +71,7 @@
                     <input type="number" id="longitudeInput" value="-66.06" class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex-1">
-                    <button id="toggleDstButton" class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase tracking-tight">DST: OFF</button>
+                    <button id="toggleDstButton" class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase">DST: OFF</button>
                 </div>
             </div>
         </div>
@@ -96,7 +97,7 @@
 
             <div class="flex items-center gap-3">
                 <input type="range" id="daySlider" min="1" max="365" value="1" class="flex-1">
-                <button id="resetToday" class="text-[9px] font-black text-white bg-indigo-600 px-3 py-2.5 rounded-xl shadow-md uppercase">Today</button>
+                <button id="resetToday" class="text-[9px] font-black text-white bg-indigo-600 px-3 py-2 rounded-xl shadow-md uppercase">Today</button>
             </div>
         </div>
     </div>
