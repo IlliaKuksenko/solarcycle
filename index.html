@@ -111,7 +111,6 @@
             const start = new Date(YEAR, 0, 0), todayOrdinal = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
             let currentDay = todayOrdinal;
 
-            // Automatically calculate the local UTC offset in hours
             const getLocalOffset = () => -(new Date().getTimezoneOffset() / 60);
 
             resetToday.onclick = () => { daySlider.value = todayOrdinal; update(); };
@@ -127,16 +126,20 @@
                     return localDate.getUTCHours() + localDate.getUTCMinutes() / 60;
                 };
 
-                const sunrise = toWall(times.sunrise) || toWall(times.dawn);
-                const sunset = toWall(times.sunset) || toWall(times.dusk);
-                return { sunrise, sunset, dayLen: (sunset - sunrise + 24) % 24, nightLen: 24 - ((sunset - sunrise + 24) % 24) };
+                return {
+                    sunrise: toWall(times.sunrise),
+                    sunset: toWall(times.sunset),
+                    dusk: toWall(times.dusk), // Civil Twilight Ends
+                    nauticalDusk: toWall(times.nauticalDusk), // Nautical Ends
+                    night: toWall(times.night), // Astronomical Ends
+                    dayLen: (toWall(times.sunset) - toWall(times.sunrise) + 24) % 24,
+                    nightLen: 24 - ((toWall(times.sunset) - toWall(times.sunrise) + 24) % 24)
+                };
             }
 
             function drawClock() {
                 ctx.clearRect(0, 0, W, H);
                 const times = getSunTimes(currentDay, parseFloat(latitudeInput.value), parseFloat(longitudeInput.value));
-                
-                // Current local time in decimal hours
                 const now = new Date();
                 const nowH = now.getHours() + now.getMinutes() / 60;
                 
@@ -146,11 +149,14 @@
                     ctx.stroke(); 
                 };
                 
-                drawArc(times.sunset, times.sunrise, '#0f172a'); // Night
-                drawArc(times.sunrise, times.sunset, '#fbbf24'); // Day
+                // Order matters for layering
+                drawArc(0, 24, '#0f172a'); // Base Night
+                drawArc(times.sunset, times.night, '#4f46e5'); // Twilight/Blue Hour
+                drawArc(times.sunrise, times.sunset, '#fbbf24'); // Sunlight
 
                 const timeToPolar = (h, r) => ({ x: centerX + r * Math.cos((h / 24) * 2 * Math.PI - Math.PI / 2), y: centerY + r * Math.sin((h / 24) * 2 * Math.PI - Math.PI / 2) });
                 const handP = timeToPolar(nowH, CLOCK_RADIUS - 20);
+                
                 ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(handP.x, handP.y); ctx.stroke();
                 
                 ctx.fillStyle = '#1e293b'; ctx.font = '900 74px Inter'; ctx.textAlign = 'center';
@@ -161,8 +167,10 @@
                 if (nowH >= times.sunrise && nowH < times.sunset) {
                     const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
                     ctx.fillStyle = '#f59e0b'; ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
+                } else if (nowH >= times.sunset && nowH < times.night) {
+                    ctx.fillStyle = '#6366f1'; ctx.fillText("TWILIGHT", centerX, centerY + 65);
                 } else {
-                    ctx.fillStyle = '#6366f1'; ctx.fillText("NIGHT", centerX, centerY + 65);
+                    ctx.fillStyle = '#94a3b8'; ctx.fillText("NIGHT", centerX, centerY + 65);
                 }
                 
                 const formatTime = (h) => `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -175,10 +183,8 @@
             const update = () => {
                 currentDay = parseInt(daySlider.value);
                 currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-                
                 const offset = getLocalOffset();
                 tzDisplay.textContent = `UTC ${offset >= 0 ? '+' : ''}${offset}`;
-                
                 drawClock();
             };
 
