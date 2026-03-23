@@ -17,59 +17,62 @@
             box-sizing: border-box; max-width: 420px; margin: 0 auto; 
         }
 
-        /* Fixed Top Settings (Always Visible) */
+        /* Compact Top Settings */
         .static-settings {
-            background: white; border-radius: 1rem; padding: 0.75rem; 
-            border: 1px solid #f1f5f9; margin-top: 0.25rem; margin-bottom: 0.5rem;
+            background: white; border-radius: 1rem; padding: 0.6rem; 
+            border: 1px solid #f1f5f9; margin-bottom: 0.4rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
 
-        /* Dynamic Clock Area - Now fits available space */
+        /* FLEX 1: This area shrinks to fit available space */
         .visualizer-area { 
             flex: 1; display: flex; align-items: center; justify-content: center; 
-            min-height: 0; position: relative; width: 100%; padding: 0.5rem;
+            min-height: 0; position: relative; width: 100%; overflow: hidden;
         }
         
         canvas { 
             max-width: 100%; max-height: 100%; width: auto !important; height: auto !important; 
-            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2.5rem; 
+            aspect-ratio: 1 / 1; background-color: #ffffff; border-radius: 2.25rem; 
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04); 
         }
 
-        /* Adjusted Info Hub Position */
+        /* Slim Bottom Hub */
         .info-hub {
-            position: relative; margin-top: auto; margin-bottom: calc(0.5rem + var(--safe-bottom));
-            background: white; padding: 1.25rem; border-radius: 2rem; 
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.06); z-index: 50; border: 1px solid #f1f5f9;
+            background: white; padding: 0.85rem 1rem; border-radius: 1.75rem; 
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9;
+            margin-bottom: calc(0.5rem + var(--safe-bottom)); margin-top: 0.25rem;
         }
 
-        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 24px; margin: 0.5rem 0; }
-        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #f1f5f9; border-radius: 10px; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #f1f5f9; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { 
-            -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; 
-            background: #4f46e5; margin-top: -10px; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; 
+            background: #4f46e5; margin-top: -9px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="px-2">
-            <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">SolarCycle</h1>
+        <div class="flex justify-between items-center px-2 mb-1">
+            <h1 class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">SolarCycle</h1>
+            <span id="timeModeDisplay" class="text-[9px] font-black text-indigo-500 uppercase">STD Time</span>
         </div>
 
         <div class="static-settings">
-            <div class="grid grid-cols-2 gap-3 mb-2.5">
-                <div class="flex flex-col">
-                    <label class="text-[7px] font-black text-slate-300 uppercase ml-1 mb-1">Latitude</label>
-                    <input type="number" id="latitudeInput" value="45.27" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+            <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                    <label class="text-[7px] font-black text-slate-300 uppercase ml-1">Lat</label>
+                    <input type="number" id="latitudeInput" value="45.27" class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
-                <div class="flex flex-col">
-                    <label class="text-[7px] font-black text-slate-300 uppercase ml-1 mb-1">Longitude</label>
-                    <input type="number" id="longitudeInput" value="-66.06" class="p-2 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+                <div class="flex-1">
+                    <label class="text-[7px] font-black text-slate-300 uppercase ml-1">Lon</label>
+                    <input type="number" id="longitudeInput" value="-66.06" class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
+                </div>
+                <div class="flex-1">
+                    <button id="toggleDstButton" class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase tracking-tight">DST: OFF</button>
                 </div>
             </div>
-            <button id="toggleDstButton" class="w-full py-2 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">Daylight Savings: <span id="timeModeDisplay">OFF</span></button>
         </div>
 
         <div class="visualizer-area">
@@ -77,23 +80,23 @@
         </div>
 
         <div class="info-hub">
-            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
+            <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-50">
                 <div class="text-left">
-                    <span id="sunriseTime" class="text-2xl font-black text-amber-500 tracking-tight">--:--</span>
-                    <p id="dayLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
+                    <span id="sunriseTime" class="text-xl font-black text-amber-500 tracking-tight">--:--</span>
+                    <p id="dayLengthValue" class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest">-- DAY</p>
                 </div>
-                <div class="text-center bg-slate-100 px-3 py-1 rounded-full">
-                    <span id="currentDateDisplay" class="text-[11px] font-black text-slate-600">--</span>
+                <div class="text-center bg-slate-100 px-2 py-0.5 rounded-full">
+                    <span id="currentDateDisplay" class="text-[9px] font-black text-slate-600">--</span>
                 </div>
                 <div class="text-right">
-                    <span id="sunsetTime" class="text-2xl font-black text-indigo-600 tracking-tight">--:--</span>
-                    <p id="nightLengthValue" class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
+                    <span id="sunsetTime" class="text-xl font-black text-indigo-600 tracking-tight">--:--</span>
+                    <p id="nightLengthValue" class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest">-- NIGHT</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
-                <input type="range" id="daySlider" min="1" max="365" value="1">
-                <button id="resetToday" class="text-[10px] font-black text-white bg-indigo-600 px-4 py-3 rounded-xl shadow-md uppercase">Today</button>
+            <div class="flex items-center gap-3">
+                <input type="range" id="daySlider" min="1" max="365" value="1" class="flex-1">
+                <button id="resetToday" class="text-[9px] font-black text-white bg-indigo-600 px-3 py-2.5 rounded-xl shadow-md uppercase">Today</button>
             </div>
         </div>
     </div>
@@ -135,13 +138,12 @@
                 const hDisp = Math.floor(nowH), mDisp = Math.floor((nowH % 1) * 60);
                 ctx.fillText(`${hDisp % 12 || 12}:${String(mDisp).padStart(2, '0')}`, centerX, centerY - 10);
                 
+                ctx.font = '900 32px Inter';
                 if (nowH >= times.sunrise && nowH < times.sunset) {
                     const r = times.sunset - nowH, rH = Math.floor(r), rM = Math.floor((r % 1) * 60);
-                    ctx.font = '900 32px Inter'; ctx.fillStyle = '#f59e0b';
-                    ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
+                    ctx.fillStyle = '#f59e0b'; ctx.fillText(`${rH}H ${rM}M LEFT`, centerX, centerY + 65);
                 } else {
-                    ctx.font = '900 32px Inter'; ctx.fillStyle = '#6366f1';
-                    ctx.fillText("NIGHT", centerX, centerY + 65);
+                    ctx.fillStyle = '#6366f1'; ctx.fillText("NIGHT", centerX, centerY + 65);
                 }
                 
                 const toClock = (h) => `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -154,7 +156,8 @@
             const update = () => {
                 currentDay = parseInt(daySlider.value);
                 currentDateDisplay.textContent = new Date(YEAR, 0, currentDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-                timeModeDisplay.textContent = isDst ? 'ON' : 'OFF';
+                toggleDstButton.textContent = `DST: ${isDst ? 'ON' : 'OFF'}`;
+                timeModeDisplay.textContent = isDst ? 'DST Time' : 'STD Time';
                 drawClock();
             };
 
