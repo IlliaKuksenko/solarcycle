@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Luminaries Pro | Saint John</title>
+    <title>Luminaries Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
@@ -12,6 +12,11 @@
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
         .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
         
+        /* Header Input Styles */
+        .config-bar { display: flex; gap: 0.5rem; padding: 0.2rem 0.5rem; background: white; border-bottom: 1px solid #f1f5f9; align-items: center; }
+        .input-mini { background: #f1f5f9; border-radius: 6px; padding: 2px 6px; font-size: 10px; font-weight: 800; width: 65px; border: none; outline: none; color: #475569; }
+        .input-mini:focus { background: #e2e8f0; color: #0f172a; }
+
         .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
         canvas { height: 100%; width: 100%; object-fit: contain; background: #0f172a; border-radius: 1.5rem; transition: background-color 0.5s ease; cursor: pointer; }
         
@@ -22,15 +27,29 @@
 
         #phaseInfo { pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: scale(0.95); z-index: 50; }
         #phaseInfo.active { opacity: 1; transform: scale(1); }
-        
         .legend-dot { width: 8px; height: 8px; border-radius: 99px; }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header class="flex justify-between items-center px-2 mb-2">
-            <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Luminaries Pro</h1>
-            <div class="bg-slate-100 px-3 py-1 rounded-lg text-[10px] font-bold text-slate-600">45.2925, -66.1132</div>
+        <header class="flex flex-col gap-1 mb-2 px-1">
+            <div class="flex justify-between items-center">
+                <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Luminaries Pro</h1>
+                <div class="flex items-center gap-1">
+                    <span class="text-[9px] font-bold text-slate-400">UTC</span>
+                    <input type="number" id="tzIn" value="-3" class="input-mini !width-[40px]">
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-md border border-slate-100">
+                    <span class="text-[8px] font-black text-slate-400">LAT</span>
+                    <input type="number" id="latIn" value="45.2925" step="0.0001" class="input-mini">
+                </div>
+                <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-md border border-slate-100">
+                    <span class="text-[8px] font-black text-slate-400">LON</span>
+                    <input type="number" id="lonIn" value="-66.1132" step="0.0001" class="input-mini">
+                </div>
+            </div>
         </header>
 
         <main class="visualizer-area">
@@ -97,6 +116,7 @@
 
     <script>
         const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800;
+        const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), tzIn = document.getElementById('tzIn');
         const sld = document.getElementById('sld'), dateD = document.getElementById('dateD');
         const riseT = document.getElementById('riseT'), setT = document.getElementById('setT'), dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL');
         const mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
@@ -108,8 +128,7 @@
         function fmt(d) {
             if (!d || isNaN(d.getTime())) return '--:--';
             let hr = d.getHours(), mn = d.getMinutes();
-            const ampm = hr >= 12 ? 'PM' : 'AM';
-            return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${ampm}`;
+            return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${hr >= 12 ? 'PM' : 'AM'}`;
         }
 
         const getAngle = (date) => {
@@ -119,9 +138,15 @@
 
         function render() {
             ctx.clearRect(0, 0, W, H);
-            const lat = 45.2925, lon = -66.1132;
-            const now = new Date();
-            const viewDate = new Date(now);
+            
+            const lat = parseFloat(latIn.value) || 0;
+            const lon = parseFloat(lonIn.value) || 0;
+            const offset = parseFloat(tzIn.value) || 0;
+
+            const nowUTC = new Date();
+            const localNow = new Date(nowUTC.getTime() + (nowUTC.getTimezoneOffset() * 60000) + (offset * 3600000));
+            
+            const viewDate = new Date(localNow);
             viewDate.setDate(viewDate.getDate() + parseInt(sld.value));
 
             dateD.textContent = viewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
@@ -130,20 +155,18 @@
             const moon = SunCalc.getMoonTimes(viewDate, lat, lon);
             const moonIllum = SunCalc.getMoonIllumination(viewDate);
 
-            // Update Text UI
+            // Update UI
             riseT.textContent = fmt(currentSun.sunrise).split(' ')[0];
             setT.textContent = fmt(currentSun.sunset).split(' ')[0];
             mRise.textContent = moon.rise ? fmt(moon.rise).split(' ')[0] : '---';
             mSet.textContent = moon.set ? fmt(moon.set).split(' ')[0] : '---';
-            
             const dl = (currentSun.sunset - currentSun.sunrise) / 3600000;
             dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl % 1) * 60)}M DAY`;
             nightL.textContent = `${Math.floor(24 - dl)}H ${Math.round(((24 - dl) % 1) * 60)}M NIGHT`;
-            
             const phases = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
             mPhase.textContent = phases[Math.floor(moonIllum.phase * 8) % 8].toUpperCase();
 
-            // 1. 24-Hour Markers
+            // 1. Clock Background & Scale
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             for (let i = 0; i < 24; i++) {
                 const ang = (i / 24) * 2 * Math.PI - Math.PI / 2;
@@ -157,12 +180,12 @@
             }
 
             const drawArc = (start, end, color, radius, width = 60) => {
-                if (!start || !end) return;
+                if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return;
                 ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'butt';
                 ctx.beginPath(); ctx.arc(400, 400, radius, getAngle(start), getAngle(end)); ctx.stroke();
             };
 
-            // 2. Arcs
+            // 2. Solar/Lunar Rings
             drawArc(new Date(viewDate).setHours(0,0,0), new Date(viewDate).setHours(23,59,59), '#1e293b', 340);
             drawArc(currentSun.dawn, currentSun.dusk, '#4f46e5', 340);
             drawArc(currentSun.sunrise, currentSun.sunset, '#fbbf24', 340);
@@ -178,12 +201,12 @@
                 }
             }
 
-            // 3. Hand & Clock
-            const hAng = getAngle(now);
+            // 3. Time Hand
+            const hAng = getAngle(localNow);
             ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(400, 400); ctx.lineTo(400 + 355 * Math.cos(hAng), 400 + 355 * Math.sin(hAng)); ctx.stroke();
             ctx.fillStyle = '#f8fafc'; ctx.font = '900 130px Inter';
-            ctx.fillText(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, 400, 440);
+            ctx.fillText(`${String(localNow.getHours()).padStart(2, '0')}:${String(localNow.getMinutes()).padStart(2, '0')}`, 400, 440);
         }
 
         function showPop(l, r) {
@@ -203,9 +226,9 @@
             }
         }
 
-        sld.oninput = render;
+        [sld, latIn, lonIn, tzIn].forEach(el => el.oninput = render);
         document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
-        window.onload = () => { render(); setInterval(render, 1000); };
+        window.onload = () => { render(); setInterval(render, 60000); };
     </script>
 </body>
 </html>
