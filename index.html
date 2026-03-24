@@ -19,11 +19,12 @@
         .input-group input { background: transparent; width: 100%; font-size: 11px; font-weight: 700; outline: none; color: #334155; }
         
         .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
-        canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.25rem; transition: background-color 0.5s ease; }
+        canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.25rem; transition: background-color 0.5s ease; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         
+        /* Interactive Popup */
+        #tip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 80%; padding: 2rem 1rem; border-radius: 2.5rem; text-align: center; display: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.2); pointer-events: none; border: 1px solid #f1f5f9; }
+
         .info-hub { background: white; padding: 1rem; border-radius: 1.5rem; box-shadow: 0 -4px 25px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
     </style>
@@ -45,6 +46,11 @@
 
         <main class="visualizer-area">
             <canvas id="cvs" width="800" height="800"></canvas>
+            <div id="tip">
+                <p id="tipTitle" class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2"></p>
+                <p id="tipBody" class="text-3xl font-black text-slate-900 leading-none mb-1"></p>
+                <p id="tipSub" class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter"></p>
+            </div>
         </main>
 
         <footer class="info-hub">
@@ -80,7 +86,7 @@
 
             <div class="flex items-center gap-4">
                 <input type="range" id="sld" min="0" max="365" value="0" class="flex-1">
-                <button id="resetBtn" class="text-[11px] font-black text-indigo-600 uppercase whitespace-nowrap bg-indigo-50 px-4 py-2 rounded-xl">Now</button>
+                <button id="resetBtn" class="text-[11px] font-black text-indigo-600 uppercase whitespace-nowrap bg-indigo-50 px-4 py-2 rounded-xl active:scale-95 transition-transform">Now</button>
             </div>
         </footer>
     </div>
@@ -88,10 +94,11 @@
     <script>
         const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800, R = 340, R_MOON = 265;
         const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
-        const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT'), tzLabel = document.getElementById('tzLabel');
+        const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT');
         const dayL = document.getElementById('dayL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
+        const tip = document.getElementById('tip'), tipT = document.getElementById('tipTitle'), tipB = document.getElementById('tipBody'), tipS = document.getElementById('tipSub');
 
-        let manualOffset = -3; 
+        let manualOffset = -3, currentSun, currentMoon, tipTimer; 
 
         function getTargetDate(offsetHours) {
             const now = new Date();
@@ -125,22 +132,22 @@
             
             dateD.textContent = viewDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
             
-            const times = SunCalc.getTimes(viewDate, lat, lon);
-            const mTimes = SunCalc.getMoonTimes(viewDate, lat, lon);
+            currentSun = SunCalc.getTimes(viewDate, lat, lon);
+            currentMoon = SunCalc.getMoonTimes(viewDate, lat, lon);
             const mIllum = SunCalc.getMoonIllumination(viewDate);
             
-            riseT.textContent = fmt(times.sunrise); 
-            setT.textContent = fmt(times.sunset);
-            mRise.textContent = mTimes.rise ? fmt(mTimes.rise) : '--:--';
-            mSet.textContent = mTimes.set ? fmt(mTimes.set) : '--:--';
+            riseT.textContent = fmt(currentSun.sunrise); 
+            setT.textContent = fmt(currentSun.sunset);
+            mRise.textContent = currentMoon.rise ? fmt(currentMoon.rise) : '--:--';
+            mSet.textContent = currentMoon.set ? fmt(currentMoon.set) : '--:--';
             mPhase.textContent = getMoonPhaseName(mIllum.phase).toUpperCase();
 
-            if (times.sunrise && times.sunset) {
-                const dl = (times.sunset - times.sunrise) / 3600000;
+            if (currentSun.sunrise && currentSun.sunset) {
+                const dl = (currentSun.sunset - currentSun.sunrise) / 3600000;
                 dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
             }
 
-            const isNight = targetNow < times.sunrise || targetNow > times.sunset;
+            const isNight = targetNow < currentSun.sunrise || targetNow > currentSun.sunset;
             canvas.style.backgroundColor = isNight ? '#0f172a' : '#ffffff';
             const textColor = isNight ? '#f8fafc' : '#1e293b';
 
@@ -158,15 +165,15 @@
 
             // Solar Ring
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNight ? '#1e293b' : '#f1f5f9', R); 
-            drawArc(times.sunrise, times.sunset, '#fbbf24', R); 
+            drawArc(currentSun.sunrise, currentSun.sunset, '#fbbf24', R); 
             
             // Moon Ring
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNight ? '#1e293b' : '#f1f5f9', R_MOON, 35); 
-            if (mTimes.rise && mTimes.set) {
-                if (mTimes.rise < mTimes.set) drawArc(mTimes.rise, mTimes.set, '#cbd5e1', R_MOON, 35);
+            if (currentMoon.rise && currentMoon.set) {
+                if (currentMoon.rise < currentMoon.set) drawArc(currentMoon.rise, currentMoon.set, '#cbd5e1', R_MOON, 35);
                 else { 
-                    drawArc(mTimes.rise, new Date(viewDate.setHours(23,59)), '#cbd5e1', R_MOON, 35);
-                    drawArc(new Date(viewDate.setHours(0,0)), mTimes.set, '#cbd5e1', R_MOON, 35);
+                    drawArc(currentMoon.rise, new Date(viewDate.setHours(23,59)), '#cbd5e1', R_MOON, 35);
+                    drawArc(new Date(viewDate.setHours(0,0)), currentMoon.set, '#cbd5e1', R_MOON, 35);
                 }
             }
 
@@ -180,6 +187,30 @@
             ctx.fillStyle = textColor; ctx.font = '900 120px Inter'; ctx.textAlign = 'center';
             ctx.fillText(`${String(targetNow.getHours()).padStart(2,'0')}:${String(targetNow.getMinutes()).padStart(2,'0')}`, 400, 440);
         }
+
+        // Click Logic
+        canvas.onclick = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (800 / rect.width) - 400;
+            const y = (e.clientY - rect.top) * (800 / rect.height) - 400;
+            const dist = Math.sqrt(x*x + y*y);
+            
+            tip.style.display = 'block';
+            clearTimeout(tipTimer);
+
+            if (dist > 300 && dist < 400) { // Solar Ring
+                tipT.textContent = "Solar Window";
+                tipB.textContent = `${fmt(currentSun.sunrise)} — ${fmt(currentSun.sunset)}`;
+                tipS.textContent = "Total Daylight Duration";
+            } else if (dist > 200 && dist <= 300) { // Moon Ring
+                tipT.textContent = "Lunar Window";
+                tipB.textContent = currentMoon.rise ? `${fmt(currentMoon.rise)} — ${fmt(currentMoon.set)}` : "No lunar visibility";
+                tipS.textContent = "Moon Exposure Window";
+            } else {
+                tip.style.display = 'none';
+            }
+            tipTimer = setTimeout(() => tip.style.display = 'none', 3500);
+        };
 
         sld.oninput = render;
         document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
