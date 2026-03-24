@@ -114,12 +114,13 @@
             const sld = document.getElementById('sld'), dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT');
             const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet');
 
-            // Crucial Fix: Standardize all time display to the coordinate's offset
-            const toDec = (d, lon) => {
-                if (!d) return null;
-                const utc = d.getUTCHours() + d.getUTCMinutes()/60 + d.getUTCSeconds()/3600;
-                const offset = lon / 15;
-                return (utc + offset + 24) % 24;
+            // NEW: Simplified Solar Time logic. No timezone guessing.
+            // All output is relative to Local Solar Noon (12:00 at current Longitude)
+            const toSolarDec = (date, lon) => {
+                if (!date) return null;
+                const utcHours = date.getUTCHours() + date.getUTCMinutes()/60 + date.getUTCSeconds()/3600;
+                // Solar Time = UTC + (Longitude / 15)
+                return (utcHours + (lon / 15) + 24) % 24;
             };
 
             const fmt = (h) => {
@@ -133,23 +134,33 @@
             function render() {
                 ctx.clearRect(0, 0, W, H);
                 const day = parseInt(sld.value), lat = parseFloat(latIn.value), lon = parseFloat(lonIn.value);
-                const date = new Date(Date.UTC(2026, 0, day, 12));
+                
+                // Using UTC 12:00 as a base for daily calculations
+                const date = new Date(Date.UTC(2026, 0, day, 12, 0, 0));
                 dateD.textContent = date.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
                 
                 const s = SunCalc.getTimes(date, lat, lon), m = SunCalc.getMoonTimes(date, lat, lon);
-                const sun = { dawn: toDec(s.dawn, lon), rise: toDec(s.sunrise, lon), set: toDec(s.sunset, lon), night: toDec(s.night, lon) };
+                const sun = { 
+                    dawn: toSolarDec(s.dawn, lon), 
+                    rise: toSolarDec(s.sunrise, lon), 
+                    set: toSolarDec(s.sunset, lon), 
+                    night: toSolarDec(s.night, lon) 
+                };
                 
-                riseT.textContent = fmt(sun.rise); setT.textContent = fmt(sun.set);
-                mRise.textContent = fmt(toDec(m.rise, lon)); mSet.textContent = fmt(toDec(m.set, lon));
+                riseT.textContent = fmt(sun.rise); 
+                setT.textContent = fmt(sun.set);
+                mRise.textContent = fmt(toSolarDec(m.rise, lon)); 
+                mSet.textContent = fmt(toSolarDec(m.set, lon));
 
-                if (sun.rise !== null) {
+                if (sun.rise !== null && sun.set !== null) {
                     const dl = (sun.set - sun.rise + 24) % 24;
                     dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
                     nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
                 }
 
+                // Get Current Solar Time for the Red Hand
                 const now = new Date();
-                const nowH = toDec(now, lon);
+                const nowSolarH = toSolarDec(now, lon);
                 
                 const arc = (sStart, sEnd, color) => {
                     if (sStart === null || sEnd === null) return;
@@ -158,6 +169,7 @@
                     ctx.stroke();
                 };
 
+                // Draw background rings
                 arc(0, 24, '#0f172a');
                 if (sun.rise !== null) { 
                     arc(sun.dawn, sun.rise, '#4f46e5'); 
@@ -165,19 +177,22 @@
                     arc(sun.rise, sun.set, '#fbbf24'); 
                 }
 
+                // 24-hour markers
                 ctx.textAlign = 'center'; ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px Inter';
                 for (let i = 0; i < 24; i += 3) {
                     const a = (i/24)*2*Math.PI-Math.PI/2;
                     ctx.fillText(i === 0 ? '24' : i, 300 + 285*Math.cos(a), 300 + 285*Math.sin(a));
                 }
 
+                // Red hand pointing to current solar time
                 ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath();
                 ctx.moveTo(300, 300);
-                ctx.lineTo(300 + 200*Math.cos((nowH/24)*2*Math.PI-Math.PI/2), 300 + 200*Math.sin((nowH/24)*2*Math.PI-Math.PI/2));
+                ctx.lineTo(300 + 200*Math.cos((nowSolarH/24)*2*Math.PI-Math.PI/2), 300 + 200*Math.sin((nowSolarH/24)*2*Math.PI-Math.PI/2));
                 ctx.stroke();
                 
+                // Digital Center display
                 ctx.fillStyle = '#1e293b'; ctx.font = '900 80px Inter';
-                const hh = Math.floor(nowH), mm = String(Math.floor((nowH % 1) * 60)).padStart(2, '0');
+                const hh = Math.floor(nowSolarH), mm = String(Math.floor((nowSolarH % 1) * 60)).padStart(2, '0');
                 ctx.fillText(`${hh}:${mm}`, 300, 310);
             }
 
