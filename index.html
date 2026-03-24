@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SolarCycle Pro</title>
+    <title>SolarCycle Sync</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
@@ -24,9 +24,9 @@
 <body>
     <div class="app-container">
         <header class="flex justify-between items-center px-2 mb-2 flex-shrink-0">
-            <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SolarCycle</h1>
+            <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SolarCycle Sync</h1>
             <div class="flex gap-1.5" id="tabs">
-                <button onclick="useCurrentLoc(this)" id="btnCurrent" class="fav-btn active">Current Location</button>
+                <button onclick="useCurrentLoc(this)" id="btnCurrent" class="fav-btn active">Current</button>
                 <button onclick="loadSavedLoc(this)" id="btnSaved" class="fav-btn">Favorite</button>
             </div>
         </header>
@@ -41,7 +41,7 @@
                     <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase">Lon</label>
                     <input type="number" id="lonIn" value="-66.06" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
                 </div>
-                <button onclick="saveToFavorite()" class="h-[34px] px-3 bg-indigo-50 text-indigo-600 rounded-xl text-[16px] active:scale-90 transition-transform">★</button>
+                <button onclick="saveToFavorite()" class="h-[34px] px-3 bg-indigo-50 text-indigo-600 rounded-xl active:scale-90">★</button>
                 <button id="resetBtn" class="h-[34px] px-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase">Sync</button>
             </div>
         </section>
@@ -62,156 +62,125 @@
                     <p id="nightL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">-- Night</p>
                 </div>
             </div>
-            <div class="flex justify-between items-center mb-4 px-1">
-                <div class="text-left"><p class="text-[8px] font-black text-slate-300 uppercase">☾ Moonrise</p><time id="mRise" class="text-sm font-bold text-slate-500">--:--</time></div>
-                <div class="text-right"><p class="text-[8px] font-black text-slate-300 uppercase">Moonset ☾</p><time id="mSet" class="text-sm font-bold text-slate-500">--:--</time></div>
+            <div class="flex items-center gap-3">
+                <input type="range" id="sld" min="0" max="365" value="0" class="flex-1">
+                <div id="liveLabel" class="text-[10px] font-black text-indigo-600 uppercase">Live</div>
             </div>
-            <div class="flex items-center gap-3"><input type="range" id="sld" min="1" max="365" value="1" class="flex-1"><div class="text-[10px] font-black text-indigo-600 uppercase">Live</div></div>
         </footer>
     </div>
 
     <script>
-        const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), btnSaved = document.getElementById('btnSaved');
-        
+        const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 600, H = 600, R = 220;
+        const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
+        const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT');
+        const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), btnSaved = document.getElementById('btnSaved');
+
+        function toDec(d) { return d ? d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600 : null; }
+        function fmt(h) {
+            if (h === null) return '--:--';
+            const hr = Math.floor(h) % 24, mn = Math.floor((h % 1) * 60);
+            return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${hr >= 12 ? 'PM' : 'AM'}`;
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, W, H);
+            const lat = parseFloat(latIn.value), lon = parseFloat(lonIn.value);
+            const now = new Date();
+            const viewDate = new Date();
+            viewDate.setDate(viewDate.getDate() + parseInt(sld.value));
+            
+            dateD.textContent = viewDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
+            
+            const times = SunCalc.getTimes(viewDate, lat, lon);
+            const sun = {
+                dawn: toDec(times.dawn),
+                rise: toDec(times.sunrise),
+                ghStart: toDec(times.goldenHourEnd),
+                ghEnd: toDec(times.goldenHour),
+                set: toDec(times.sunset),
+                night: toDec(times.night),
+                noon: toDec(times.solarNoon)
+            };
+
+            riseT.textContent = fmt(sun.rise); setT.textContent = fmt(sun.set);
+            if (sun.rise) {
+                const dl = (sun.set - sun.rise + 24) % 24;
+                dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
+                nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
+            }
+
+            const arc = (s, e, c, w=80) => {
+                if (s === null || e === null) return;
+                ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
+                ctx.arc(300, 300, R, (s/24)*2*Math.PI-Math.PI/2, (e/24)*2*Math.PI-Math.PI/2);
+                ctx.stroke();
+            };
+
+            // Drawing the Clock Ring
+            arc(0, 24, '#0f172a'); // Night
+            arc(sun.dawn, sun.night, '#4f46e5'); // Twilight
+            arc(sun.rise, sun.set, '#fbbf24'); // Day
+            arc(sun.rise, sun.ghStart, '#f59e0b', 85); // Golden Hour Morning
+            arc(sun.ghEnd, sun.set, '#f59e0b', 85); // Golden Hour Evening
+
+            // Solar Noon Tick
+            if (sun.noon) {
+                const ang = (sun.noon/24)*2*Math.PI-Math.PI/2;
+                ctx.strokeStyle = 'white'; ctx.lineWidth = 4; ctx.beginPath();
+                ctx.moveTo(300 + 180*Math.cos(ang), 300 + 180*Math.sin(ang));
+                ctx.lineTo(300 + 260*Math.cos(ang), 300 + 260*Math.sin(ang));
+                ctx.stroke();
+            }
+
+            // Dial Numbers
+            ctx.textAlign = 'center'; ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px Inter';
+            for (let i = 0; i < 24; i += 3) {
+                const a = (i/24)*2*Math.PI-Math.PI/2;
+                ctx.fillText(i === 0 ? '24' : i, 300 + 285*Math.cos(a), 300 + 285*Math.sin(a));
+            }
+
+            // Red Hand (Always Local Time)
+            const curH = toDec(now);
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath();
+            ctx.moveTo(300, 300);
+            ctx.lineTo(300 + 200*Math.cos((curH/24)*2*Math.PI-Math.PI/2), 300 + 200*Math.sin((curH/24)*2*Math.PI-Math.PI/2));
+            ctx.stroke();
+
+            // Digital Center
+            ctx.fillStyle = '#1e293b'; ctx.font = '900 80px Inter';
+            const dispH = String(now.getHours()).padStart(2, '0'), dispM = String(now.getMinutes()).padStart(2, '0');
+            ctx.fillText(`${dispH}:${dispM}`, 300, 310);
+        }
+
         function saveToFavorite() {
-            const name = prompt("Name this favorite:", btnSaved.innerText === "FAVORITE" ? "" : btnSaved.innerText);
+            const name = prompt("Name this favorite:");
             if (name) {
-                const data = { name: name.toUpperCase(), lat: latIn.value, lon: lonIn.value };
-                localStorage.setItem('solarFav', JSON.stringify(data));
+                localStorage.setItem('solarFav', JSON.stringify({ name: name.toUpperCase(), lat: latIn.value, lon: lonIn.value }));
                 updateFavUI();
             }
         }
-
         function updateFavUI() {
-            const saved = JSON.parse(localStorage.getItem('solarFav'));
-            if (saved) { btnSaved.innerText = saved.name; }
+            const s = JSON.parse(localStorage.getItem('solarFav'));
+            if (s) btnSaved.innerText = s.name;
         }
-
         function loadSavedLoc(btn) {
-            const saved = JSON.parse(localStorage.getItem('solarFav'));
-            if (saved) {
-                latIn.value = saved.lat; lonIn.value = saved.lon;
-                setActive(btn);
-            } else { saveToFavorite(); }
+            const s = JSON.parse(localStorage.getItem('solarFav'));
+            if (s) { latIn.value = s.lat; lonIn.value = s.lon; setActive(btn); }
         }
-
         function useCurrentLoc(btn) {
             navigator.geolocation.getCurrentPosition(p => {
-                latIn.value = p.coords.latitude.toFixed(4);
-                lonIn.value = p.coords.longitude.toFixed(4);
+                latIn.value = p.coords.latitude.toFixed(4); lonIn.value = p.coords.longitude.toFixed(4);
                 setActive(btn);
             });
         }
-
         function setActive(btn) {
             document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            window.requestUpdate();
+            btn.classList.add('active'); render();
         }
 
-        (function () {
-            const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 600, H = 600, R = 220;
-            const sld = document.getElementById('sld'), dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT');
-            const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet');
-
-            // NEW: Simplified Solar Time logic. No timezone guessing.
-            // All output is relative to Local Solar Noon (12:00 at current Longitude)
-            const toSolarDec = (date, lon) => {
-                if (!date) return null;
-                const utcHours = date.getUTCHours() + date.getUTCMinutes()/60 + date.getUTCSeconds()/3600;
-                // Solar Time = UTC + (Longitude / 15)
-                return (utcHours + (lon / 15) + 24) % 24;
-            };
-
-            const fmt = (h) => {
-                if (h === null || isNaN(h)) return '--:--';
-                const hours = Math.floor(h) % 24;
-                const displayH = hours % 12 || 12;
-                const m = String(Math.floor((h % 1) * 60)).padStart(2, '0');
-                return `${displayH}:${m} ${hours >= 12 ? 'PM' : 'AM'}`;
-            };
-
-            function render() {
-                ctx.clearRect(0, 0, W, H);
-                const day = parseInt(sld.value), lat = parseFloat(latIn.value), lon = parseFloat(lonIn.value);
-                
-                // Using UTC 12:00 as a base for daily calculations
-                const date = new Date(Date.UTC(2026, 0, day, 12, 0, 0));
-                dateD.textContent = date.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
-                
-                const s = SunCalc.getTimes(date, lat, lon), m = SunCalc.getMoonTimes(date, lat, lon);
-                const sun = { 
-                    dawn: toSolarDec(s.dawn, lon), 
-                    rise: toSolarDec(s.sunrise, lon), 
-                    set: toSolarDec(s.sunset, lon), 
-                    night: toSolarDec(s.night, lon) 
-                };
-                
-                riseT.textContent = fmt(sun.rise); 
-                setT.textContent = fmt(sun.set);
-                mRise.textContent = fmt(toSolarDec(m.rise, lon)); 
-                mSet.textContent = fmt(toSolarDec(m.set, lon));
-
-                if (sun.rise !== null && sun.set !== null) {
-                    const dl = (sun.set - sun.rise + 24) % 24;
-                    dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
-                    nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
-                }
-
-                // Get Current Solar Time for the Red Hand
-                const now = new Date();
-                const nowSolarH = toSolarDec(now, lon);
-                
-                const arc = (sStart, sEnd, color) => {
-                    if (sStart === null || sEnd === null) return;
-                    ctx.strokeStyle = color; ctx.lineWidth = 80; ctx.beginPath();
-                    ctx.arc(300, 300, R, (sStart/24)*2*Math.PI-Math.PI/2, (sEnd/24)*2*Math.PI-Math.PI/2);
-                    ctx.stroke();
-                };
-
-                // Draw background rings
-                arc(0, 24, '#0f172a');
-                if (sun.rise !== null) { 
-                    arc(sun.dawn, sun.rise, '#4f46e5'); 
-                    arc(sun.set, sun.night, '#4f46e5'); 
-                    arc(sun.rise, sun.set, '#fbbf24'); 
-                }
-
-                // 24-hour markers
-                ctx.textAlign = 'center'; ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px Inter';
-                for (let i = 0; i < 24; i += 3) {
-                    const a = (i/24)*2*Math.PI-Math.PI/2;
-                    ctx.fillText(i === 0 ? '24' : i, 300 + 285*Math.cos(a), 300 + 285*Math.sin(a));
-                }
-
-                // Red hand pointing to current solar time
-                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath();
-                ctx.moveTo(300, 300);
-                ctx.lineTo(300 + 200*Math.cos((nowSolarH/24)*2*Math.PI-Math.PI/2), 300 + 200*Math.sin((nowSolarH/24)*2*Math.PI-Math.PI/2));
-                ctx.stroke();
-                
-                // Digital Center display
-                ctx.fillStyle = '#1e293b'; ctx.font = '900 80px Inter';
-                const hh = Math.floor(nowSolarH), mm = String(Math.floor((nowSolarH % 1) * 60)).padStart(2, '0');
-                ctx.fillText(`${hh}:${mm}`, 300, 310);
-            }
-
-            let tick = false;
-            window.requestUpdate = () => { if(!tick) { requestAnimationFrame(() => { render(); tick = false; }); tick = true; } };
-            [sld, latIn, lonIn].forEach(e => e.oninput = window.requestUpdate);
-            document.getElementById('resetBtn').onclick = () => { 
-                const start = new Date(Date.UTC(2026, 0, 0));
-                sld.value = Math.floor((new Date() - start) / 86400000); 
-                window.requestUpdate(); 
-            };
-            window.onload = () => { 
-                updateFavUI(); 
-                const start = new Date(Date.UTC(2026, 0, 0));
-                sld.value = Math.floor((new Date() - start) / 86400000); 
-                window.requestUpdate(); 
-                setInterval(window.requestUpdate, 1000);
-            };
-        })();
+        document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
+        sld.oninput = render; latIn.oninput = render; lonIn.oninput = render;
+        window.onload = () => { updateFavUI(); render(); setInterval(render, 1000); };
     </script>
 </body>
 </html>
