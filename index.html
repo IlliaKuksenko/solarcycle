@@ -3,40 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SolarCycle Pro</title>
+    <title>Luminaries Pro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%234f46e5'/><stop offset='100%' stop-color='%23fbbf24'/></linearGradient></defs><circle cx='50' cy='50' r='50' fill='url(%23g)'/><path d='M50 10 A40 40 0 0 1 50 90 A25 25 0 0 0 50 10 Z' fill='white' opacity='0.8'/><path d='M50 30 A20 20 0 0 0 50 70 A20 20 0 0 1 50 30 Z' fill='%23fbbf24'/><path d='M50 30 A20 20 0 0 0 50 70 A12 12 0 0 1 50 30 Z' fill='white'/><circle cx='50' cy='50' r='8' fill='%234f46e5'/></svg>" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
+        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; opacity: 0; transition: opacity 0.8s ease; }
+        .app-container.ready { opacity: 1; }
         
+        /* Settings */
         .settings-bar { background: white; border-radius: 0.75rem; padding: 0.4rem; border: 1px solid #f1f5f9; display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0; margin-bottom: 0.4rem; }
         .input-group { background: #f8fafc; border-radius: 0.5rem; padding: 0.2rem 0.5rem; border: 1px solid #f1f5f9; display: flex; align-items: center; flex: 1; }
         .input-group span { font-size: 7px; font-weight: 900; color: #94a3b8; margin-right: 4px; }
         .input-group input { background: transparent; width: 100%; font-size: 11px; font-weight: 700; outline: none; color: #334155; }
-        
         .utc-mini { display: flex; align-items: center; background: #f1f5f9; border-radius: 0.5rem; padding: 2px; gap: 2px; }
         .btn-tiny { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #64748b; background: white; border-radius: 4px; }
         .tz-text { font-size: 9px; font-weight: 900; color: #475569; min-width: 42px; text-align: center; }
 
+        /* Visualization */
         .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
         canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.25rem; transition: background-color 0.5s ease; }
         
         #tip { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 85%; display: none; z-index: 50; pointer-events: none; }
-
         .info-hub { background: white; padding: 0.8rem 1.2rem; border-radius: 1.25rem; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #e2e8f0; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+        /* Splash Screen */
+        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; transition: opacity 1s ease, visibility 1s; }
+        #splash.fade-out { opacity: 0; visibility: hidden; }
+        .logo-sun-moon { width: 120px; height: 120px; fill: white; filter: drop-shadow(0 0 15px rgba(251,191,36,0.5)); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
     </style>
 </head>
 <body>
-    <div class="app-container">
+    <div id="splash">
+        <svg class="logo-sun-moon mb-6" viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id='gsplash' x1='0' y1='0' x2='1' y2='1'>
+                    <stop offset='0%' stop-color='#4f46e5'/>
+                    <stop offset='100%' stop-color='#fbbf24'/>
+                </linearGradient>
+            </defs>
+            <path d="M50 10 A40 40 0 0 1 50 90 A25 25 0 0 0 50 10 Z" fill="white" opacity="0.9"/>
+            <path d="M50 30 A20 20 0 0 0 50 70 A20 20 0 0 1 50 30 Z" fill="#fbbf24"/>
+            <path d="M50 30 A20 20 0 0 0 50 70 A12 12 0 0 1 50 30 Z" fill="#0f172a"/>
+            <circle cx="50" cy="50" r="8" fill="url(#gsplash)"/>
+        </svg>
+        <h2 class="text-3xl font-black text-white tracking-widest">Luminaries Pro</h2>
+        <p class="text-sm font-medium text-slate-400 mt-2 uppercase tracking-tight">Day & Night Synchronization</p>
+    </div>
+
+    <div class="app-container" id="app">
         <header class="flex justify-between items-center px-2 mb-1 flex-shrink-0">
-            <h1 class="text-[8px] font-black text-slate-400 uppercase tracking-widest">SolarCycle Pro</h1>
+            <h1 class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Luminaries Pro</h1>
             <div class="text-[7px] font-black text-indigo-500 uppercase bg-indigo-50 px-2 py-0.5 rounded-md">Live Sync</div>
         </header>
 
@@ -91,7 +116,7 @@
 
             <div class="flex items-center gap-3">
                 <input type="range" id="sld" min="0" max="365" value="0" class="flex-1">
-                <button id="resetBtn" class="text-[10px] font-black text-indigo-600 uppercase px-2 tracking-tighter">Now</button>
+                <button id="resetBtn" class="text-[9px] font-black text-indigo-600 uppercase px-2 tracking-tighter">Now</button>
             </div>
         </footer>
     </div>
@@ -102,7 +127,7 @@
         const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT'), tzLabel = document.getElementById('tzLabel');
         const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
 
-        let manualOffset = -3; // Defaulting to your local UTC-3
+        let manualOffset = -3; 
 
         function showTip(title, text, color) {
             const tip = document.getElementById('tip');
@@ -183,12 +208,14 @@
                 ctx.stroke();
             };
 
+            // Solar Rings
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R); 
             drawArc(times.dawn, times.night, '#4f46e5', R); 
             drawArc(times.sunrise, times.sunset, '#fbbf24', R); 
             drawArc(times.sunrise, times.goldenHourEnd, '#f59e0b', R, 70); 
             drawArc(times.goldenHour, times.sunset, '#f59e0b', R, 70); 
 
+            // Inner Moon Ring
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R_MOON, 35); 
             const sod = new Date(viewDate); sod.setHours(0,0,0,0);
             const eod = new Date(viewDate); eod.setHours(23,59,59,999);
@@ -219,7 +246,19 @@
         lonIn.oninput = render;
         document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
         
-        window.onload = () => { render(); setInterval(render, 1000); };
+        // Initial setup and fade-in
+        window.onload = () => { 
+            render(); 
+            setInterval(render, 1000); 
+
+            // Simulate loading data, then fade
+            setTimeout(() => {
+                const splash = document.getElementById('splash');
+                const app = document.getElementById('app');
+                splash.classList.add('fade-out');
+                app.classList.add('ready');
+            }, 1800);
+        };
     </script>
 </body>
 </html>
