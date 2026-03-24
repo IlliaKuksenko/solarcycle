@@ -38,7 +38,7 @@
                     <input type="number" id="longitudeInput" value="-66.06" step="0.01" class="w-full p-1.5 bg-slate-50 rounded-lg text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex-1">
-                    <button id="resetToday" class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase active:scale-95">Sync Today</button>
+                    <button id="resetToday" class="w-full py-1.5 bg-slate-900 text-white rounded-lg text-[8px] font-black uppercase active:scale-95 transition-transform">Sync Today</button>
                 </div>
             </div>
         </section>
@@ -99,7 +99,7 @@
                 return (utcHours + (lon / 15) + 24) % 24;
             };
 
-            const formatTime = (h) => h === null ? '--:--' : `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+            const formatTime = (h) => (h === null || isNaN(h)) ? '--:--' : `${Math.floor(h) % 12 || 12}:${String(Math.round((h % 1) * 60)).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
             function drawMoon(x, y, radius, illum) {
                 ctx.save(); ctx.translate(x, y); ctx.fillStyle = "#f1f5f9"; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
@@ -110,6 +110,9 @@
             }
 
             function update() {
+                // CLEAR CANVAS FIRST - Crucial fix for the stacking issue
+                ctx.clearRect(0, 0, W, H);
+
                 const currentDay = parseInt(daySlider.value);
                 const date = new Date(Date.UTC(YEAR, 0, currentDay, 12));
                 currentDateDisplay.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
@@ -133,23 +136,23 @@
                 moonriseDisplay.textContent = formatTime(toSolarDecimal(mTimes.rise, lon));
                 moonsetDisplay.textContent = formatTime(toSolarDecimal(mTimes.set, lon));
                 
-                if (sun.sunrise !== null) {
+                if (sun.sunrise !== null && sun.sunset !== null) {
                     const dL = (sun.sunset - sun.sunrise + 24) % 24;
                     dayLengthValue.textContent = `${Math.floor(dL)}h ${Math.round((dL % 1) * 60)}m DAY`;
                     nightLengthValue.textContent = `${Math.floor(24-dL)}h ${Math.round(((24-dL) % 1) * 60)}m NIGHT`;
                 }
 
-                // --- CLEAR AND DRAW ---
-                ctx.clearRect(0, 0, W, H);
                 const now = new Date();
                 const nowSolarH = (now.getUTCHours() + now.getUTCMinutes() / 60 + (lon / 15) + 24) % 24;
 
                 const drawArc = (s, e, color) => { 
+                    if (s === null || e === null) return;
                     ctx.strokeStyle = color; ctx.lineWidth = 85; ctx.beginPath(); 
                     ctx.arc(centerX, centerY, CLOCK_RADIUS, (s / 24 * 2 * Math.PI) - Math.PI / 2, (e / 24 * 2 * Math.PI) - Math.PI / 2); 
                     ctx.stroke(); 
                 };
                 
+                // Redraw Arcs
                 drawArc(0, 24, COLORS.night); 
                 if (sun.sunrise !== null) { 
                     drawArc(sun.dawn, sun.sunrise, COLORS.twilight); 
@@ -157,7 +160,7 @@
                     drawArc(sun.sunrise, sun.sunset, COLORS.day); 
                 }
 
-                // Numbers
+                // Redraw Labels (cleanly)
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 for (let i = 0; i < 24; i++) {
                     const angle = (i / 24) * 2 * Math.PI - Math.PI / 2, textR = CLOCK_RADIUS + 65, x = centerX + textR * Math.cos(angle), y = centerY + textR * Math.sin(angle);
