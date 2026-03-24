@@ -15,7 +15,7 @@
         .visualizer-area { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0.25rem 0; }
         canvas { max-height: 100%; max-width: 100%; aspect-ratio: 1/1; background: white; border-radius: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
         .info-hub { background: white; padding: 1rem; border-radius: 1.75rem; box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
-        .fav-btn { font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; }
+        .fav-btn { font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; transition: all 0.2s; }
         .fav-btn.active { background: #4f46e5; color: white; border-color: #4f46e5; }
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
@@ -25,7 +25,7 @@
     <div class="app-container">
         <header class="flex justify-between items-center px-2 mb-2 flex-shrink-0">
             <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SolarCycle</h1>
-            <div class="flex gap-1.5" id="favBar">
+            <div class="flex gap-1.5">
                 <button onclick="useCurrentLoc(this)" id="btnCurrent" class="fav-btn active">Current Location</button>
                 <button onclick="loadSavedLoc(this)" id="btnSaved" class="fav-btn">Favorite</button>
             </div>
@@ -35,13 +35,13 @@
             <div class="flex gap-2 items-end">
                 <div class="flex-1">
                     <label class="text-[8px] font-black text-slate-400 block mb-1">LAT</label>
-                    <input type="number" id="latIn" value="45.27" step="0.01" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
+                    <input type="number" id="latIn" value="45.27" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex-1">
                     <label class="text-[8px] font-black text-slate-400 block mb-1">LON</label>
-                    <input type="number" id="lonIn" value="-66.06" step="0.01" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
+                    <input type="number" id="lonIn" value="-66.06" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
                 </div>
-                <button onclick="saveToFavorite()" class="h-[34px] px-3 bg-indigo-50 text-indigo-600 rounded-xl text-[14px] active:scale-90">★</button>
+                <button onclick="saveToFavorite()" class="h-[34px] px-3 bg-indigo-50 text-indigo-600 rounded-xl text-[16px] active:scale-90 transition-transform">★</button>
                 <button id="resetBtn" class="h-[34px] px-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase">Sync</button>
             </div>
         </section>
@@ -51,18 +51,18 @@
         <footer class="info-hub">
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
                 <div class="text-left">
-                    <p class="text-[8px] font-black text-amber-500 uppercase mb-1">Sunrise</p>
-                    <time id="riseT" class="text-2xl font-black text-slate-800">--:--</time>
+                    <p class="text-[9px] font-black text-amber-500 uppercase mb-1">Sunrise</p>
+                    <time id="riseT" class="text-3xl font-black text-slate-900 tracking-tight">--:--</time>
                     <p id="dayL" class="text-[8px] font-bold text-slate-400 mt-1">-- DAY</p>
                 </div>
                 <div class="bg-slate-100 px-3 py-1 rounded-full"><span id="dateD" class="text-[10px] font-black text-slate-600">--</span></div>
                 <div class="text-right">
-                    <p class="text-[8px] font-black text-indigo-500 uppercase mb-1">Sunset</p>
-                    <time id="setT" class="text-2xl font-black text-slate-800">--:--</time>
+                    <p class="text-[9px] font-black text-indigo-500 uppercase mb-1">Sunset</p>
+                    <time id="setT" class="text-3xl font-black text-slate-900 tracking-tight">--:--</time>
                     <p id="nightL" class="text-[8px] font-bold text-slate-400 mt-1">-- NIGHT</p>
                 </div>
             </div>
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex justify-between items-center mb-4 px-1">
                 <div class="text-left"><p class="text-[8px] font-black text-slate-300 uppercase">Moonrise</p><time id="mRise" class="text-sm font-bold text-slate-500">--:--</time></div>
                 <div class="text-right"><p class="text-[8px] font-black text-slate-300 uppercase">Moonset</p><time id="mSet" class="text-sm font-bold text-slate-500">--:--</time></div>
             </div>
@@ -74,7 +74,8 @@
         const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), btnSaved = document.getElementById('btnSaved');
         
         function saveToFavorite() {
-            const name = prompt("Name this favorite location:", btnSaved.innerText === "FAVORITE" ? "" : btnSaved.innerText);
+            const currentName = btnSaved.innerText === "FAVORITE" ? "" : btnSaved.innerText;
+            const name = prompt("Enter a name for this favorite location:", currentName);
             if (name) {
                 const data = { name: name.toUpperCase(), lat: latIn.value, lon: lonIn.value };
                 localStorage.setItem('solarFav', JSON.stringify(data));
@@ -84,7 +85,7 @@
 
         function updateFavUI() {
             const saved = JSON.parse(localStorage.getItem('solarFav'));
-            if (saved) { btnSaved.innerText = saved.name; btnSaved.style.display = 'block'; }
+            if (saved) { btnSaved.innerText = saved.name; }
         }
 
         function loadSavedLoc(btn) {
@@ -96,11 +97,13 @@
         }
 
         function useCurrentLoc(btn) {
-            navigator.geolocation.getCurrentPosition(p => {
-                latIn.value = p.coords.latitude.toFixed(4);
-                lonIn.value = p.coords.longitude.toFixed(4);
-                setActive(btn);
-            });
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    latIn.value = p.coords.latitude.toFixed(4);
+                    lonIn.value = p.coords.longitude.toFixed(4);
+                    setActive(btn);
+                }, () => alert("Location access denied."));
+            }
         }
 
         function setActive(btn) {
@@ -132,7 +135,7 @@
                 if (sun.rise !== null) {
                     const dl = (sun.set - sun.rise + 24) % 24;
                     dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
-                    nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
+                    nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl) % 1) * 60)}M NIGHT`;
                 }
 
                 const now = new Date(), nowH = (now.getUTCHours() + now.getUTCMinutes()/60 + (lon/15) + 24) % 24;
@@ -144,7 +147,7 @@
                 };
 
                 arc(0, 24, '#0f172a');
-                if (sun.rise !== null) { arc(sun.dawn, sun.rise, '#4f46e5'); arc(sun.set, sun.night, '#4f46e5'); arc(sun.rise, sun.set, '#fbbf24'); }
+                if (sun.rise !== null) { arc(sun.dawn, sun.sunrise, '#4f46e5'); arc(sun.sunset, sun.night, '#4f46e5'); arc(sun.sunrise, sun.sunset, '#fbbf24'); }
 
                 ctx.textAlign = 'center'; ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px Inter';
                 for (let i = 0; i < 24; i += 3) {
@@ -164,7 +167,12 @@
             window.requestUpdate = () => { if(!tick) { requestAnimationFrame(() => { render(); tick = false; }); tick = true; } };
             [sld, latIn, lonIn].forEach(e => e.oninput = window.requestUpdate);
             document.getElementById('resetBtn').onclick = () => { sld.value = Math.floor((new Date() - new Date(2026,0,0))/86400000); window.requestUpdate(); };
-            window.onload = () => { updateFavUI(); sld.value = Math.floor((new Date() - new Date(2026,0,0))/86400000); window.requestUpdate(); setInterval(window.requestUpdate, 30000); };
+            window.onload = () => { 
+                updateFavUI(); 
+                sld.value = Math.floor((new Date() - new Date(2026,0,0))/86400000); 
+                window.requestUpdate(); 
+                setInterval(window.requestUpdate, 30000); 
+            };
         })();
     </script>
 </body>
