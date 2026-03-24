@@ -12,18 +12,16 @@
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
         .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
         
-        /* Header Input Styles */
-        .config-bar { display: flex; gap: 0.5rem; padding: 0.2rem 0.5rem; background: white; border-bottom: 1px solid #f1f5f9; align-items: center; }
         .input-mini { background: #f1f5f9; border-radius: 6px; padding: 2px 6px; font-size: 10px; font-weight: 800; width: 65px; border: none; outline: none; color: #475569; }
         .input-mini:focus { background: #e2e8f0; color: #0f172a; }
 
         .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
-        canvas { height: 100%; width: 100%; object-fit: contain; background: #0f172a; border-radius: 1.5rem; transition: background-color 0.5s ease; cursor: pointer; }
+        canvas { height: 100%; width: 100%; object-fit: contain; background: #0f172a; border-radius: 1.5rem; cursor: pointer; }
         
         .info-hub { background: white; padding: 1rem; border-radius: 1.5rem; border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); box-shadow: 0 -10px 25px rgba(0,0,0,0.02); }
         
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; }
 
         #phaseInfo { pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: scale(0.95); z-index: 50; }
         #phaseInfo.active { opacity: 1; transform: scale(1); }
@@ -37,7 +35,7 @@
                 <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Luminaries Pro</h1>
                 <div class="flex items-center gap-1">
                     <span class="text-[9px] font-bold text-slate-400">UTC</span>
-                    <input type="number" id="tzIn" value="-3" class="input-mini !width-[40px]">
+                    <input type="number" id="tzIn" value="-3" class="input-mini !w-[45px]">
                 </div>
             </div>
             <div class="flex gap-2">
@@ -54,7 +52,6 @@
 
         <main class="visualizer-area">
             <canvas id="cvs" width="800" height="800"></canvas>
-            
             <div id="phaseInfo" class="absolute inset-0 flex flex-col items-center justify-center">
                 <div class="bg-white/95 backdrop-blur-xl px-8 py-5 rounded-[2.5rem] border border-white shadow-2xl text-center">
                     <span id="pLabel" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Twilight</span>
@@ -63,22 +60,22 @@
             </div>
         </main>
 
-        <div class="flex justify-center gap-2 py-3">
+        <div class="flex justify-center gap-2 py-3 overflow-x-auto">
             <button onclick="triggerLegend('Day')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-sm active:scale-95 transition-transform">
                 <div class="legend-dot bg-[#fbbf24]"></div>
-                <span class="text-[8px] font-black text-slate-500 uppercase">Day</span>
+                <span class="text-[8px] font-black text-slate-500 uppercase whitespace-nowrap">Day</span>
             </button>
             <button onclick="triggerLegend('Golden Hour')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-sm active:scale-95 transition-transform">
                 <div class="legend-dot bg-[#f59e0b]"></div>
-                <span class="text-[8px] font-black text-slate-500 uppercase">Golden</span>
+                <span class="text-[8px] font-black text-slate-500 uppercase whitespace-nowrap">Golden</span>
             </button>
             <button onclick="triggerLegend('Twilight')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-sm active:scale-95 transition-transform">
                 <div class="legend-dot bg-[#4f46e5]"></div>
-                <span class="text-[8px] font-black text-slate-500 uppercase">Twilight</span>
+                <span class="text-[8px] font-black text-slate-500 uppercase whitespace-nowrap">Twilight</span>
             </button>
             <button onclick="triggerLegend('Night')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-sm active:scale-95 transition-transform">
                 <div class="legend-dot bg-[#1e293b]"></div>
-                <span class="text-[8px] font-black text-slate-500 uppercase">Night</span>
+                <span class="text-[8px] font-black text-slate-500 uppercase whitespace-nowrap">Night</span>
             </button>
         </div>
 
@@ -94,7 +91,6 @@
                         <div id="nightL" class="text-center text-[9px] font-black text-slate-400 bg-slate-50 py-1 rounded-md uppercase tracking-tighter">--H --M NIGHT</div>
                     </div>
                 </div>
-
                 <div class="flex-1 bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100 flex flex-col justify-between">
                     <div class="flex justify-between mb-2">
                         <div class="flex flex-col"><span class="text-[8px] font-black text-indigo-600 uppercase">Moonrise</span><time id="mRise" class="text-lg font-black text-slate-900">--:--</time></div>
@@ -103,7 +99,6 @@
                     <div id="mPhase" class="text-center text-[9px] font-black text-indigo-700 bg-white/80 py-2 rounded-md uppercase tracking-tighter">PHASE</div>
                 </div>
             </div>
-
             <div class="flex flex-col items-center">
                 <div id="dateD" class="text-[10px] font-black text-indigo-600 uppercase bg-indigo-50 px-5 py-1.5 rounded-full mb-3 tracking-widest border border-indigo-100">MAR 23</div>
                 <div class="flex items-center gap-4 w-full">
@@ -122,40 +117,35 @@
         const mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
         const pInfo = document.getElementById('phaseInfo'), pLabel = document.getElementById('pLabel'), pRange = document.getElementById('pRange');
 
-        let currentSun = null;
-        let popTimer = null;
+        let currentSun = null, popTimer = null;
 
         function fmt(d) {
             if (!d || isNaN(d.getTime())) return '--:--';
-            let hr = d.getHours(), mn = d.getMinutes();
-            return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${hr >= 12 ? 'PM' : 'AM'}`;
+            return `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${d.getHours() >= 12 ? 'PM' : 'AM'}`;
         }
 
         const getAngle = (date) => {
-            const hours = date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
-            return (hours / 24) * 2 * Math.PI - Math.PI / 2;
+            const h = date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+            return (h / 24) * 2 * Math.PI - Math.PI / 2;
         };
 
         function render() {
             ctx.clearRect(0, 0, W, H);
+            const lat = parseFloat(latIn.value) || 0, lon = parseFloat(lonIn.value) || 0, offset = parseFloat(tzIn.value) || 0;
             
-            const lat = parseFloat(latIn.value) || 0;
-            const lon = parseFloat(lonIn.value) || 0;
-            const offset = parseFloat(tzIn.value) || 0;
+            // Save settings
+            localStorage.setItem('lum_settings', JSON.stringify({lat, lon, offset}));
 
             const nowUTC = new Date();
             const localNow = new Date(nowUTC.getTime() + (nowUTC.getTimezoneOffset() * 60000) + (offset * 3600000));
-            
             const viewDate = new Date(localNow);
             viewDate.setDate(viewDate.getDate() + parseInt(sld.value));
 
             dateD.textContent = viewDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
-            
             currentSun = SunCalc.getTimes(viewDate, lat, lon);
             const moon = SunCalc.getMoonTimes(viewDate, lat, lon);
-            const moonIllum = SunCalc.getMoonIllumination(viewDate);
+            const mIllum = SunCalc.getMoonIllumination(viewDate);
 
-            // Update UI
             riseT.textContent = fmt(currentSun.sunrise).split(' ')[0];
             setT.textContent = fmt(currentSun.sunset).split(' ')[0];
             mRise.textContent = moon.rise ? fmt(moon.rise).split(' ')[0] : '---';
@@ -164,9 +154,9 @@
             dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl % 1) * 60)}M DAY`;
             nightL.textContent = `${Math.floor(24 - dl)}H ${Math.round(((24 - dl) % 1) * 60)}M NIGHT`;
             const phases = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
-            mPhase.textContent = phases[Math.floor(moonIllum.phase * 8) % 8].toUpperCase();
+            mPhase.textContent = phases[Math.floor(mIllum.phase * 8) % 8].toUpperCase();
 
-            // 1. Clock Background & Scale
+            // Clock Scale
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             for (let i = 0; i < 24; i++) {
                 const ang = (i / 24) * 2 * Math.PI - Math.PI / 2;
@@ -174,18 +164,15 @@
                 ctx.fillStyle = isMajor ? '#f8fafc' : '#334155';
                 ctx.font = isMajor ? '900 24px Inter' : '600 12px Inter';
                 if (isMajor) ctx.fillText(i === 0 ? '24' : i, 400 + 380 * Math.cos(ang), 400 + 380 * Math.sin(ang));
-                else {
-                    ctx.beginPath(); ctx.arc(400 + 375 * Math.cos(ang), 400 + 375 * Math.sin(ang), 2, 0, Math.PI * 2); ctx.fill();
-                }
+                else { ctx.beginPath(); ctx.arc(400 + 375 * Math.cos(ang), 400 + 375 * Math.sin(ang), 2, 0, Math.PI * 2); ctx.fill(); }
             }
 
-            const drawArc = (start, end, color, radius, width = 60) => {
-                if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return;
-                ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'butt';
-                ctx.beginPath(); ctx.arc(400, 400, radius, getAngle(start), getAngle(end)); ctx.stroke();
+            const drawArc = (s, e, col, rad, wid = 60) => {
+                if (!s || !e || isNaN(s.getTime())) return;
+                ctx.strokeStyle = col; ctx.lineWidth = wid; ctx.lineCap = 'butt';
+                ctx.beginPath(); ctx.arc(400, 400, rad, getAngle(s), getAngle(e)); ctx.stroke();
             };
 
-            // 2. Solar/Lunar Rings
             drawArc(new Date(viewDate).setHours(0,0,0), new Date(viewDate).setHours(23,59,59), '#1e293b', 340);
             drawArc(currentSun.dawn, currentSun.dusk, '#4f46e5', 340);
             drawArc(currentSun.sunrise, currentSun.sunset, '#fbbf24', 340);
@@ -195,13 +182,9 @@
             drawArc(new Date(viewDate).setHours(0,0,0), new Date(viewDate).setHours(23,59,59), '#1e293b', 265, 35);
             if (moon.rise && moon.set) {
                 if (moon.rise < moon.set) drawArc(moon.rise, moon.set, '#cbd5e1', 265, 35);
-                else {
-                    drawArc(moon.rise, new Date(viewDate).setHours(23,59,59), '#cbd5e1', 265, 35);
-                    drawArc(new Date(viewDate).setHours(0,0,0), moon.set, '#cbd5e1', 265, 35);
-                }
+                else { drawArc(moon.rise, new Date(viewDate).setHours(23,59,59), '#cbd5e1', 265, 35); drawArc(new Date(viewDate).setHours(0,0,0), moon.set, '#cbd5e1', 265, 35); }
             }
 
-            // 3. Time Hand
             const hAng = getAngle(localNow);
             ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(400, 400); ctx.lineTo(400 + 355 * Math.cos(hAng), 400 + 355 * Math.sin(hAng)); ctx.stroke();
@@ -211,8 +194,7 @@
 
         function showPop(l, r) {
             pLabel.textContent = l; pRange.textContent = r;
-            pInfo.classList.add('active');
-            clearTimeout(popTimer);
+            pInfo.classList.add('active'); clearTimeout(popTimer);
             popTimer = setTimeout(() => pInfo.classList.remove('active'), 3000);
         }
 
@@ -226,9 +208,13 @@
             }
         }
 
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('lum_settings'));
+            if (saved) { latIn.value = saved.lat; lonIn.value = saved.lon; tzIn.value = saved.offset; }
+            render(); setInterval(render, 60000);
+        };
         [sld, latIn, lonIn, tzIn].forEach(el => el.oninput = render);
         document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
-        window.onload = () => { render(); setInterval(render, 60000); };
     </script>
 </body>
 </html>
