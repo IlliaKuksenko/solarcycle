@@ -10,45 +10,50 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.5rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
-        .settings-panel { background: white; border-radius: 1rem; padding: 0.5rem; border: 1px solid #f1f5f9; margin-bottom: 0.4rem; flex-shrink: 0; }
-        .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0; width: 100%; min-height: 0; }
-        canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); transition: background-color 0.5s ease; }
+        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
+        
+        /* Ultra-compact Settings */
+        .settings-bar { background: white; border-radius: 0.75rem; padding: 0.4rem; border: 1px solid #f1f5f9; display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0; margin-bottom: 0.4rem; }
+        .input-group { background: #f8fafc; border-radius: 0.5rem; padding: 0.2rem 0.5rem; border: 1px solid #f1f5f9; display: flex; align-items: center; flex: 1; }
+        .input-group span { font-size: 7px; font-weight: 900; color: #94a3b8; margin-right: 4px; }
+        .input-group input { background: transparent; width: 100%; font-size: 11px; font-weight: 700; outline: none; color: #334155; }
+        
+        /* Shrunken UTC Controls */
+        .utc-mini { display: flex; align-items: center; background: #f1f5f9; border-radius: 0.5rem; padding: 2px; gap: 2px; }
+        .btn-tiny { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #64748b; background: white; border-radius: 4px; }
+        .tz-text { font-size: 9px; font-weight: 900; color: #475569; min-width: 42px; text-align: center; }
+
+        .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+        canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.25rem; transition: background-color 0.5s ease; }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .info-hub { background: white; padding: 0.75rem 1rem; border-radius: 1.5rem; box-shadow: 0 -5px 25px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); position: relative; }
-        .offset-btn { width: 28px; height: 28px; background: #f1f5f9; border-radius: 6px; font-weight: 900; font-size: 12px; color: #475569; display: flex; align-items: center; justify-content: center; }
-        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        #popover { pointer-events: none; opacity: 0; transition: opacity 0.2s; }
-        #popover.show { opacity: 1; }
+        .info-hub { background: white; padding: 0.6rem 1rem; border-radius: 1.25rem; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
+        
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #e2e8f0; border-radius: 10px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header class="flex justify-between items-center px-3 mb-1 flex-shrink-0">
-            <h1 class="text-[9px] font-black text-slate-400 uppercase tracking-widest">SolarCycle Pro</h1>
-            <div id="statusTag" class="text-[8px] font-black text-indigo-500 uppercase">Live Sync</div>
+        <header class="flex justify-between items-center px-2 mb-1 flex-shrink-0">
+            <h1 class="text-[8px] font-black text-slate-400 uppercase tracking-widest">SolarCycle Pro</h1>
+            <div class="text-[7px] font-black text-indigo-500 uppercase">Live Sync</div>
         </header>
 
-        <section class="settings-panel">
-            <div class="flex gap-2 items-center mb-2">
-                <div class="flex-1 flex items-center bg-slate-50 rounded-lg px-2 py-1 border border-slate-100">
-                    <span class="text-[7px] font-black text-slate-400 uppercase mr-2">LAT</span>
-                    <input type="number" id="latIn" value="45.27" step="0.0001" class="bg-transparent w-full text-xs font-bold outline-none">
-                </div>
-                <div class="flex-1 flex items-center bg-slate-50 rounded-lg px-2 py-1 border border-slate-100">
-                    <span class="text-[7px] font-black text-slate-400 uppercase mr-2">LON</span>
-                    <input type="number" id="lonIn" value="-66.06" step="0.0001" class="bg-transparent w-full text-xs font-bold outline-none">
-                </div>
+        <section class="settings-bar">
+            <div class="input-group">
+                <span>LAT</span>
+                <input type="number" id="latIn" value="45.2925" step="0.0001">
             </div>
-            <div class="flex justify-between items-center bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                <button onclick="resetToGeoOffset()" class="offset-btn">↺</button>
-                <div class="flex items-center gap-3">
-                    <button onclick="adjTZ(-1)" class="offset-btn">-</button>
-                    <span id="tzLabel" class="text-[10px] font-black text-slate-600 min-w-[50px] text-center">UTC-4</span>
-                    <button onclick="adjTZ(1)" class="offset-btn">+</button>
-                </div>
+            <div class="input-group">
+                <span>LON</span>
+                <input type="number" id="lonIn" value="-66.1132" step="0.0001">
+            </div>
+            <div class="utc-mini">
+                <button onclick="resetToGeoOffset()" class="btn-tiny">↺</button>
+                <button onclick="adjTZ(-1)" class="btn-tiny">-</button>
+                <span id="tzLabel" class="tz-text">UTC-4</span>
+                <button onclick="adjTZ(1)" class="btn-tiny">+</button>
             </div>
         </section>
 
@@ -56,70 +61,50 @@
             <canvas id="cvs" width="800" height="800"></canvas>
         </main>
 
-        <div class="flex gap-1.5 overflow-x-auto px-2 py-2 mb-1 flex-shrink-0 no-scrollbar items-center">
-            <button onclick="showTip('Day', 'Full sunlight.', '#fbbf24')" class="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-100 text-[8px] font-bold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#fbbf24]"></span> Day</button>
-            <button onclick="showTip('Golden Hour', 'Soft, warm light.', '#f59e0b')" class="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-100 text-[8px] font-bold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span> Golden Hour</button>
-            <button onclick="showTip('Twilight', 'Blue hour phases.', '#4f46e5')" class="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-100 text-[8px] font-bold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#4f46e5]"></span> Twilight</button>
-            <button onclick="showTip('Night', 'Total darkness.', '#0f172a')" class="flex items-center gap-1 bg-white px-2 py-1 rounded-md border border-slate-100 text-[8px] font-bold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#0f172a]"></span> Night</button>
+        <div class="flex gap-1.5 overflow-x-auto py-2 flex-shrink-0 no-scrollbar items-center justify-center">
+            <div class="flex items-center gap-1 text-[7px] font-bold text-slate-400 uppercase"><span class="w-1.5 h-1.5 rounded-full bg-[#fbbf24]"></span> Day</div>
+            <div class="flex items-center gap-1 text-[7px] font-bold text-slate-400 uppercase ml-2"><span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span> Golden</div>
+            <div class="flex items-center gap-1 text-[7px] font-bold text-slate-400 uppercase ml-2"><span class="w-1.5 h-1.5 rounded-full bg-[#4f46e5]"></span> Twilight</div>
         </div>
 
         <footer class="info-hub">
-            <div id="popover" class="absolute -top-12 left-4 right-4 bg-slate-900 text-white p-2 rounded-xl shadow-xl z-50">
-                <p id="tipTitle" class="text-[8px] font-black uppercase mb-0.5">TITLE</p>
-                <p id="tipDesc" class="text-[10px] font-medium leading-tight text-slate-300">Description.</p>
-            </div>
-
-            <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-50">
+            <div class="flex justify-between items-center mb-2">
                 <div class="flex flex-col">
-                    <span class="text-[8px] font-black text-amber-500 uppercase">Sunrise</span>
-                    <time id="riseT" class="text-xl font-black text-slate-900 leading-none">--:--</time>
-                    <span id="dayL" class="text-[7px] font-bold text-slate-400 mt-0.5 uppercase">-- DAY</span>
+                    <span class="text-[7px] font-black text-amber-500 uppercase">Sunrise</span>
+                    <time id="riseT" class="text-lg font-black text-slate-900 leading-tight">--:--</time>
                 </div>
                 <div class="bg-indigo-600 px-2 py-0.5 rounded-full">
-                    <span id="dateD" class="text-[9px] font-black text-white block">--</span>
+                    <span id="dateD" class="text-[8px] font-black text-white">--</span>
                 </div>
                 <div class="flex flex-col items-end">
-                    <span class="text-[8px] font-black text-indigo-500 uppercase">Sunset</span>
-                    <time id="setT" class="text-xl font-black text-slate-900 leading-none">--:--</time>
-                    <span id="nightL" class="text-[7px] font-bold text-slate-400 mt-0.5 uppercase">-- NIGHT</span>
+                    <span class="text-[7px] font-black text-indigo-500 uppercase">Sunset</span>
+                    <time id="setT" class="text-lg font-black text-slate-900 leading-tight">--:--</time>
                 </div>
             </div>
             
-            <div class="flex justify-between items-center px-1 mb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-[7px] font-black text-slate-300 uppercase">Moonrise</span>
-                    <span id="mRise" class="text-[10px] font-black text-slate-700">--:--</span>
+            <div class="flex justify-between items-center mb-3 text-[7px] font-bold text-slate-400 uppercase px-1">
+                <span id="dayL">--H --M DAY</span>
+                <div class="flex gap-4 lowercase">
+                    <span>rise: <b id="mRise" class="text-slate-700">--:--</b></span>
+                    <span>set: <b id="mSet" class="text-slate-700">--:--</b></span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[7px] font-black text-slate-300 uppercase">Moonset</span>
-                    <span id="mSet" class="text-[10px] font-black text-slate-700">--:--</span>
-                </div>
+                <span id="nightL">--H --M NIGHT</span>
             </div>
 
             <div class="flex items-center gap-3">
                 <input type="range" id="sld" min="0" max="365" value="0" class="flex-1">
-                <button id="resetBtn" class="text-[9px] font-black text-indigo-600 uppercase whitespace-nowrap px-2">Now</button>
+                <button id="resetBtn" class="text-[8px] font-black text-indigo-600 uppercase px-2">Now</button>
             </div>
         </footer>
     </div>
 
     <script>
-        const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800, R = 330, R_MOON = 250;
+        const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800, R = 340, R_MOON = 265;
         const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
         const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT'), tzLabel = document.getElementById('tzLabel');
         const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet');
-        const pop = document.getElementById('popover'), tipT = document.getElementById('tipTitle'), tipD = document.getElementById('tipDesc');
 
-        // Dynamic UTC default based on user system
         let manualOffset = -(new Date().getTimezoneOffset() / 60);
-        let tipTimer;
-
-        function showTip(title, desc, color) {
-            clearTimeout(tipTimer);
-            tipT.innerText = title; tipT.style.color = color; tipD.innerText = desc;
-            pop.classList.add('show');
-            tipTimer = setTimeout(() => pop.classList.remove('show'), 3000);
-        }
 
         function adjTZ(v) { manualOffset += v; render(); }
         function resetToGeoOffset() { manualOffset = Math.round(parseFloat(lonIn.value) / 15); render(); }
@@ -157,8 +142,8 @@
 
             if (times.sunrise && times.sunset) {
                 const dl = (times.sunset - times.sunrise) / 3600000;
-                dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M`;
-                nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M`;
+                dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
+                nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
             }
 
             const isNightAtTarget = targetNow < times.sunrise || targetNow > times.sunset;
@@ -171,67 +156,54 @@
                 return (h/24)*2*Math.PI-Math.PI/2;
             };
 
-            const drawArc = (s, e, c, rad, w=55) => {
+            const drawArc = (s, e, c, rad, w=60) => {
                 if (!s || !e) return;
                 ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
                 ctx.arc(400, 400, rad, getPos(s), getPos(e));
                 ctx.stroke();
             };
 
+            // Sun/Twilight Logic
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R); 
             drawArc(times.dawn, times.night, '#4f46e5', R); 
             drawArc(times.sunrise, times.sunset, '#fbbf24', R); 
-            drawArc(times.sunrise, times.goldenHourEnd, '#f59e0b', R, 65); 
-            drawArc(times.goldenHour, times.sunset, '#f59e0b', R, 65); 
+            drawArc(times.sunrise, times.goldenHourEnd, '#f59e0b', R, 70); 
+            drawArc(times.goldenHour, times.sunset, '#f59e0b', R, 70); 
 
-            if (times.solarNoon) {
-                const noonAng = getPos(times.solarNoon);
-                ctx.strokeStyle = isNightAtTarget ? '#334155' : '#ffffff'; ctx.lineWidth = 6; ctx.beginPath();
-                ctx.moveTo(400 + (R-35)*Math.cos(noonAng), 400 + (R-35)*Math.sin(noonAng));
-                ctx.lineTo(400 + (R+35)*Math.cos(noonAng), 400 + (R+35)*Math.sin(noonAng));
-                ctx.stroke();
-            }
-
-            drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R_MOON, 30); 
+            // Moon Logic
+            drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R_MOON, 35); 
             const sod = new Date(viewDate); sod.setHours(0,0,0,0);
             const eod = new Date(viewDate); eod.setHours(23,59,59,999);
-            
-            if (mTimes.alwaysUp) { drawArc(sod, eod, '#cbd5e1', R_MOON, 30); } 
+            if (mTimes.alwaysUp) { drawArc(sod, eod, '#cbd5e1', R_MOON, 35); } 
             else if (!mTimes.alwaysDown && mTimes.rise && mTimes.set) {
-                if (mTimes.rise < mTimes.set) drawArc(mTimes.rise, mTimes.set, '#cbd5e1', R_MOON, 30);
-                else { drawArc(sod, mTimes.set, '#cbd5e1', R_MOON, 30); drawArc(mTimes.rise, eod, '#cbd5e1', R_MOON, 30); }
+                if (mTimes.rise < mTimes.set) drawArc(mTimes.rise, mTimes.set, '#cbd5e1', R_MOON, 35);
+                else { drawArc(sod, mTimes.set, '#cbd5e1', R_MOON, 35); drawArc(mTimes.rise, eod, '#cbd5e1', R_MOON, 35); }
             }
 
-            ctx.textAlign = 'center'; ctx.fillStyle = textColor; ctx.font = 'bold 18px Inter';
+            // Dial
+            ctx.textAlign = 'center'; ctx.fillStyle = textColor; ctx.font = 'bold 20px Inter';
             for (let i = 0; i < 24; i += 3) {
                 const a = (i/24)*2*Math.PI-Math.PI/2;
                 ctx.fillText(i === 0 ? '24' : i, 400 + 375*Math.cos(a), 400 + 375*Math.sin(a));
             }
 
+            // Hands
             const handAng = getPos(targetNow);
-            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath();
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.beginPath();
             ctx.moveTo(400, 400); ctx.lineTo(400 + (R+10)*Math.cos(handAng), 400 + (R+10)*Math.sin(handAng));
             ctx.stroke();
 
-            ctx.fillStyle = textColor; ctx.font = '900 110px Inter';
+            ctx.fillStyle = textColor; ctx.font = '900 120px Inter';
             const hh = String(targetNow.getHours()).padStart(2, '0'), mm = String(targetNow.getMinutes()).padStart(2, '0');
-            ctx.fillText(`${hh}:${mm}`, 400, 435);
+            ctx.fillText(`${hh}:${mm}`, 400, 440);
         }
 
         sld.oninput = render;
-        latIn.oninput = () => { render(); };
-        lonIn.oninput = () => { render(); };
+        latIn.oninput = render;
+        lonIn.oninput = render;
         document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
         
-        window.onload = () => { 
-            navigator.geolocation.getCurrentPosition(p => {
-                latIn.value = p.coords.latitude.toFixed(4);
-                lonIn.value = p.coords.longitude.toFixed(4);
-                resetToGeoOffset();
-            });
-            render(); 
-            setInterval(render, 1000); 
-        };
+        window.onload = () => { render(); setInterval(render, 1000); };
     </script>
 </body>
 </html>
