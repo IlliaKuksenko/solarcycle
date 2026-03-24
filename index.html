@@ -10,151 +10,153 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; opacity: 0; transition: opacity 0.8s ease; }
-        .app-container.ready { opacity: 1; }
         
-        .settings-bar { background: white; border-radius: 0.75rem; padding: 0.4rem; border: 1px solid #f1f5f9; display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0; margin-bottom: 0.4rem; }
-        .input-group { background: #f8fafc; border-radius: 0.5rem; padding: 0.2rem 0.5rem; border: 1px solid #f1f5f9; display: flex; align-items: center; flex: 1; }
-        .input-group span { font-size: 7px; font-weight: 900; color: #94a3b8; margin-right: 4px; }
-        .input-group input { background: transparent; width: 100%; font-size: 11px; font-weight: 700; outline: none; color: #334155; }
+        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.8rem; padding-top: calc(0.5rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
         
-        .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
-        canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.25rem; transition: background-color 0.5s ease; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        /* Interactive Canvas */
+        .canvas-box { flex: 1; background: #0f172a; border-radius: 2rem; position: relative; margin-bottom: 1rem; overflow: hidden; }
+        canvas { width: 100%; height: 100%; object-fit: contain; -webkit-tap-highlight-color: transparent; }
         
-        #tip { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: white/95; backdrop-filter: blur(8px); padding: 14px 24px; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 15px 40px -5px rgba(0,0,0,0.2); width: 85%; display: none; z-index: 50; pointer-events: none; text-align: center; }
-        .info-hub { background: white; padding: 0.8rem 1.2rem; border-radius: 1.25rem; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
-        
-        input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #e2e8f0; border-radius: 10px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        /* Popup Overlay */
+        #tip { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 85%; padding: 1.5rem; border-radius: 2.5rem; text-align: center; display: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
 
-        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; transition: opacity 1s ease, visibility 1s; }
-        #splash.fade-out { opacity: 0; visibility: hidden; }
-        .logo-sun-moon { width: 120px; height: 120px; fill: white; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        /* Data Cards */
+        .card { background: white; border-radius: 1.5rem; padding: 1rem; flex: 1; border: 1px solid #f1f5f9; }
+        .sun-card { background: #fffdf5; border-color: #fef3c7; }
+        .moon-card { background: #f8faff; border-color: #e0e7ff; }
+
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; margin: 1rem 0; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <div id="splash">
-        <svg class="logo-sun-moon mb-6" viewBox="0 0 100 100">
-            <path d="M50 10 A40 40 0 0 1 50 90 A25 25 0 0 0 50 10 Z" fill="white" opacity="0.9"/>
-            <path d="M50 30 A20 20 0 0 0 50 70 A20 20 0 0 1 50 30 Z" fill="#fbbf24"/>
-            <path d="M50 30 A20 20 0 0 0 50 70 A12 12 0 0 1 50 30 Z" fill="#0f172a"/>
-        </svg>
-        <h2 class="text-3xl font-black text-white tracking-widest uppercase">Luminaries</h2>
+
+<div class="app-container">
+    <header class="flex justify-between items-center mb-4 px-1">
+        <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Luminaries Pro</h1>
+        <div class="flex gap-2 text-[10px] font-bold text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-100">
+            <span>45.2925</span> <span>-66.1132</span>
+        </div>
+    </header>
+
+    <div class="canvas-box">
+        <canvas id="cvs" width="800" height="800"></canvas>
+        <div id="tip">
+            <p id="tipTitle" class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1"></p>
+            <p id="tipBody" class="text-3xl font-black text-slate-900 leading-none mb-1"></p>
+            <p id="tipSub" class="text-[10px] font-bold text-slate-400 uppercase"></p>
+        </div>
     </div>
 
-    <div class="app-container" id="app">
-        <section class="settings-bar">
-            <div class="input-group"><span>LAT</span><input type="number" id="latIn" value="45.2925" step="0.0001"></div>
-            <div class="input-group"><span>LON</span><input type="number" id="lonIn" value="-66.1132" step="0.0001"></div>
-            <div class="flex items-center bg-slate-100 rounded-lg px-2 text-[10px] font-black text-slate-500">UTC-3</div>
-        </section>
-
-        <main class="visualizer-area">
-            <canvas id="cvs" width="800" height="800"></canvas>
-            <div id="tip">
-                <div id="tipColor" class="w-3 h-3 rounded-full mx-auto mb-1"></div>
-                <span id="tipTitle" class="text-[12px] font-black uppercase tracking-widest text-slate-900 block"></span>
-                <p id="tipBody" class="text-[14px] text-slate-500 font-bold tabular-nums"></p>
-            </div>
-        </main>
-
-        <footer class="info-hub">
-            <div class="flex justify-between items-center mb-6">
-                <div><span class="text-[8px] font-black text-amber-500 uppercase">Sunrise</span><p id="riseT" class="text-2xl font-black text-slate-900">--:--</p></div>
-                <div class="bg-indigo-600 px-4 py-1 rounded-full"><span id="dateD" class="text-[10px] font-black text-white uppercase">MAR 23</span></div>
-                <div class="text-right"><span class="text-[8px] font-black text-indigo-500 uppercase">Sunset</span><p id="setT" class="text-2xl font-black text-slate-900">--:--</p></div>
-            </div>
-            <input type="range" id="sld" min="0" max="365" value="0" class="w-full">
-        </footer>
+    <div class="flex justify-center gap-4 mb-4">
+        <div class="flex items-center gap-1.5 text-[9px] font-black uppercase text-slate-400"><span class="w-2 h-2 rounded-full bg-[#fbbf24]"></span> Day</div>
+        <div class="flex items-center gap-1.5 text-[9px] font-black uppercase text-slate-400"><span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span> Golden</div>
+        <div class="flex items-center gap-1.5 text-[9px] font-black uppercase text-slate-400"><span class="w-2 h-2 rounded-full bg-[#4f46e5]"></span> Twilight</div>
     </div>
 
-    <script>
-        const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d'), W = 800, H = 800;
-        const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
-        const tip = document.getElementById('tip'), tipT = document.getElementById('tipTitle'), tipB = document.getElementById('tipBody'), tipC = document.getElementById('tipColor');
-        
-        let currentSun = null, currentMoon = null, timer = null;
+    <div class="flex gap-3 mb-6">
+        <div class="card sun-card">
+            <div class="flex justify-between items-start mb-2">
+                <div><p class="text-[8px] font-black text-amber-500 uppercase">Sunrise</p><p id="riseT" class="text-xl font-black">7:23</p></div>
+                <div class="text-right"><p class="text-[8px] font-black text-amber-500 uppercase">Sunset</p><p id="setT" class="text-xl font-black">7:41</p></div>
+            </div>
+            <p id="dayDur" class="text-[10px] font-black text-amber-600 text-center bg-amber-100/50 py-1 rounded-lg">12H 18M DAY</p>
+        </div>
+        <div class="card moon-card">
+            <div class="flex justify-between items-start mb-2">
+                <div><p class="text-[8px] font-black text-indigo-500 uppercase">Moonrise</p><p id="mRise" class="text-xl font-black">9:17</p></div>
+                <div class="text-right"><p class="text-[8px] font-black text-indigo-500 uppercase">Moonset</p><p id="mSet" class="text-xl font-black">12:42</p></div>
+            </div>
+            <p id="mPhase" class="text-[10px] font-black text-indigo-600 text-center bg-indigo-100/50 py-1 rounded-lg uppercase">Waxing Crescent</p>
+        </div>
+    </div>
 
-        function fmt(d) { return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'None'; }
+    <footer class="mt-auto">
+        <div class="text-center mb-1"><span id="dateLabel" class="text-[11px] font-black text-indigo-600 bg-indigo-50 px-4 py-1 rounded-full uppercase">Mar 23</span></div>
+        <input type="range" id="sld" min="0" max="365" value="0">
+        <button onclick="resetSld()" class="w-full py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest active:scale-95 transition-transform">Now</button>
+    </footer>
+</div>
 
-        function render() {
-            ctx.clearRect(0, 0, W, H);
-            const lat = parseFloat(latIn.value), lon = parseFloat(lonIn.value);
-            const viewDate = new Date(); 
-            viewDate.setDate(viewDate.getDate() + parseInt(sld.value));
-            
-            currentSun = SunCalc.getTimes(viewDate, lat, lon);
-            currentMoon = SunCalc.getMoonTimes(viewDate, lat, lon);
+<script>
+    const cvs = document.getElementById('cvs'), ctx = cvs.getContext('2d'), W = 800, H = 800;
+    const sld = document.getElementById('sld'), dateLabel = document.getElementById('dateLabel'), tip = document.getElementById('tip');
+    
+    let currentSun, currentMoon, tipTimer;
+    const lat = 45.2925, lon = -66.1132;
 
-            document.getElementById('riseT').textContent = fmt(currentSun.sunrise).split(' ')[0];
-            document.getElementById('setT').textContent = fmt(currentSun.sunset).split(' ')[0];
-            document.getElementById('dateD').textContent = viewDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
+    function fmt(d) { return d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'; }
 
-            const getAng = (d) => ( (d.getHours() + d.getMinutes()/60)/24 ) * 2 * Math.PI - Math.PI/2;
+    function render() {
+        ctx.clearRect(0, 0, W, H);
+        const viewDate = new Date(); 
+        viewDate.setDate(viewDate.getDate() + parseInt(sld.value));
+        dateLabel.textContent = viewDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
 
-            const drawArc = (s, e, c, r, w=70) => {
-                if(!s || !e || isNaN(s.getTime())) return;
-                ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
-                ctx.arc(400, 400, r, getAng(s), getAng(e)); ctx.stroke();
-            };
+        currentSun = SunCalc.getTimes(viewDate, lat, lon);
+        currentMoon = SunCalc.getMoonTimes(viewDate, lat, lon);
+        const moonIllum = SunCalc.getMoonIllumination(viewDate);
 
-            // Solar Ring (Outer)
-            drawArc(new Date(viewDate).setHours(0,0,0), new Date(viewDate).setHours(23,59,59), '#f1f5f9', 340);
-            drawArc(currentSun.dawn, currentSun.dusk, '#4f46e5', 340);
-            drawArc(currentSun.sunrise, currentSun.sunset, '#fbbf24', 340);
-            drawArc(currentSun.sunrise, currentSun.goldenHourEnd, '#f59e0b', 340, 90);
-            drawArc(currentSun.goldenHour, currentSun.sunset, '#f59e0b', 340, 90);
+        // Update Cards
+        document.getElementById('riseT').textContent = fmt(currentSun.sunrise).split(' ')[0];
+        document.getElementById('setT').textContent = fmt(currentSun.sunset).split(' ')[0];
+        document.getElementById('mRise').textContent = fmt(currentMoon.rise).split(' ')[0];
+        document.getElementById('mSet').textContent = fmt(currentMoon.set).split(' ')[0];
 
-            // Moon Ring (Inner)
-            drawArc(new Date(viewDate).setHours(0,0,0), new Date(viewDate).setHours(23,59,59), '#f1f5f9', 240, 40);
-            if (currentMoon.rise && currentMoon.set) {
-                if (currentMoon.rise < currentMoon.set) drawArc(currentMoon.rise, currentMoon.set, '#cbd5e1', 240, 40);
-                else {
-                    drawArc(new Date(viewDate).setHours(0,0,0), currentMoon.set, '#cbd5e1', 240, 40);
-                    drawArc(currentMoon.rise, new Date(viewDate).setHours(23,59,59), '#cbd5e1', 240, 40);
-                }
-            }
+        const getAng = (d) => ( (d.getHours() + d.getMinutes()/60)/24 ) * 2 * Math.PI - Math.PI/2;
 
-            // Time Hand
-            const hand = getAng(new Date());
-            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(400, 400); ctx.lineTo(400 + 360*Math.cos(hand), 400 + 360*Math.sin(hand)); ctx.stroke();
+        const drawArc = (s, e, c, r, w=60) => {
+            if(!s || !e || isNaN(s.getTime())) return;
+            ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.arc(400, 400, r, getAng(s), getAng(e)); ctx.stroke();
+        };
 
-            // Center Text
-            ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center'; ctx.font = '900 130px Inter';
-            const now = new Date();
-            ctx.fillText(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`, 400, 445);
+        // Draw Rings
+        drawArc(currentSun.dawn, currentSun.dusk, '#4f46e5', 340); // Twilight
+        drawArc(currentSun.sunrise, currentSun.sunset, '#fbbf24', 340); // Day
+        drawArc(currentSun.sunrise, currentSun.goldenHourEnd, '#f59e0b', 340, 80); // Golden Rise
+        drawArc(currentSun.goldenHour, currentSun.sunset, '#f59e0b', 340, 80); // Golden Set
+
+        // Inner Moon Ring
+        if (currentMoon.rise && currentMoon.set) {
+            drawArc(currentMoon.rise, currentMoon.set, '#ffffff20', 250, 30);
         }
 
-        cvs.onclick = (e) => {
-            const rect = cvs.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (800 / rect.width) - 400;
-            const y = (e.clientY - rect.top) * (800 / rect.height) - 400;
-            const dist = Math.sqrt(x*x + y*y);
-            
+        // Hour Markers
+        ctx.fillStyle = '#ffffff40'; ctx.font = 'bold 20px Inter'; ctx.textAlign = 'center';
+        [0, 6, 12, 18].forEach(h => {
+            const a = (h/24)*2*Math.PI - Math.PI/2;
+            ctx.fillText(h === 0 ? '24' : h, 400 + 385*Math.cos(a), 400 + 385*Math.sin(a));
+        });
+    }
+
+    cvs.onclick = (e) => {
+        const rect = cvs.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (800 / rect.width) - 400;
+        const y = (e.clientY - rect.top) * (800 / rect.height) - 400;
+        const dist = Math.sqrt(x*x + y*y);
+        
+        if (dist > 200 && dist < 400) {
             tip.style.display = 'block';
-            clearTimeout(timer);
-
-            if (dist > 280 && dist < 400) { // Solar Zone
-                tipT.textContent = "Solar Window";
-                tipB.textContent = `${fmt(currentSun.sunrise)} — ${fmt(currentSun.sunset)}`;
-                tipC.style.backgroundColor = "#fbbf24";
-            } else if (dist > 180 && dist < 280) { // Moon Zone
-                tipT.textContent = "Lunar Window";
-                tipB.textContent = currentMoon.rise ? `${fmt(currentMoon.rise)} — ${fmt(currentMoon.set)}` : "No lunar visibility";
-                tipC.style.backgroundColor = "#94a3b8";
-            } else {
-                tip.style.display = 'none';
+            clearTimeout(tipTimer);
+            
+            if (dist > 300) { // Solar
+                document.getElementById('tipTitle').textContent = "Golden Hour Window";
+                document.getElementById('tipBody').textContent = `${fmt(currentSun.goldenHour).split(' ')[0]} — ${fmt(currentSun.sunset)}`;
+                document.getElementById('tipSub').textContent = "Perfect Lighting";
+            } else { // Moon
+                document.getElementById('tipTitle').textContent = "Moon Window";
+                document.getElementById('tipBody').textContent = currentMoon.rise ? `${fmt(currentMoon.rise).split(' ')[0]} — ${fmt(currentMoon.set)}` : "Below Horizon";
+                document.getElementById('tipSub').textContent = "Lunar Visibility";
             }
-            timer = setTimeout(() => tip.style.display = 'none', 4000);
-        };
+            tipTimer = setTimeout(() => tip.style.display = 'none', 4000);
+        }
+    };
 
-        window.onload = () => { 
-            render(); 
-            setTimeout(() => { document.getElementById('splash').classList.add('fade-out'); document.getElementById('app').classList.add('ready'); }, 1500);
-        };
-        [sld, latIn, lonIn].forEach(i => i.oninput = render);
-    </script>
+    function resetSld() { sld.value = 0; render(); }
+    sld.oninput = render;
+    window.onload = render;
+</script>
+
 </body>
 </html>
