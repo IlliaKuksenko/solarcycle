@@ -10,114 +10,106 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
-        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.5rem; padding-top: calc(0.5rem + var(--safe-top)); box-sizing: border-box; max-width: 420px; margin: 0 auto; }
+        .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.5rem; padding-top: calc(0.5rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
         .settings-panel { background: white; border-radius: 1.25rem; padding: 0.75rem; border: 1px solid #f1f5f9; margin-bottom: 0.5rem; flex-shrink: 0; }
-        .visualizer-area { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0.25rem 0; }
-        canvas { max-height: 100%; max-width: 100%; aspect-ratio: 1/1; background: white; border-radius: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); transition: background-color 0.5s ease; }
+        .visualizer-area { flex: 2; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0; width: 100%; }
+        canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: background-color 0.5s ease; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .info-hub { background: white; padding: 1rem; border-radius: 1.75rem; box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); position: relative; }
-        .fav-btn { font-size: 9px; font-weight: 800; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; }
-        .fav-btn.active { background: #4f46e5; color: white; border-color: #4f46e5; }
-        .offset-btn { width: 28px; height: 28px; background: #f1f5f9; border-radius: 6px; font-weight: 900; font-size: 14px; color: #475569; display: flex; align-items: center; justify-content: center; }
-        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-        #popover { pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-        #popover.show { opacity: 1; }
+        .info-hub { background: white; padding: 1.25rem; border-radius: 2rem; box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); position: relative; }
+        .offset-btn { width: 32px; height: 32px; background: #f1f5f9; border-radius: 8px; font-weight: 900; font-size: 14px; color: #475569; display: flex; align-items: center; justify-content: center; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; background: #4f46e5; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        #popover { pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translateY(10px); }
+        #popover.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header class="flex justify-between items-center px-2 mb-2 flex-shrink-0">
-            <h1 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SolarCycle Pro</h1>
-            <div class="flex gap-1.5">
-                <button onclick="useCurrentLoc(this)" id="btnCurrent" class="fav-btn active">Local</button>
-                <button onclick="loadSavedLoc(this)" id="btnSaved" class="fav-btn">Favorite</button>
-            </div>
+        <header class="flex justify-between items-center px-4 mb-2 flex-shrink-0">
+            <h1 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">SolarCycle Pro</h1>
+            <div id="statusTag" class="text-[9px] font-black text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md uppercase">Live Sync</div>
         </header>
 
         <section class="settings-panel">
             <div class="flex gap-2 items-end mb-3">
                 <div class="flex-1">
-                    <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase">Lat</label>
-                    <input type="number" id="latIn" value="45.27" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
+                    <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase px-1">Latitude</label>
+                    <input type="number" id="latIn" value="45.27" step="0.0001" class="w-full p-2.5 bg-slate-50 rounded-xl text-sm font-bold border border-slate-100 text-center focus:ring-2 ring-indigo-100 outline-none">
                 </div>
                 <div class="flex-1">
-                    <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase">Lon</label>
-                    <input type="number" id="lonIn" value="-66.06" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
+                    <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase px-1">Longitude</label>
+                    <input type="number" id="lonIn" value="-66.06" step="0.0001" class="w-full p-2.5 bg-slate-50 rounded-xl text-sm font-bold border border-slate-100 text-center focus:ring-2 ring-indigo-100 outline-none">
                 </div>
-                <button onclick="saveToFavorite()" class="h-[34px] px-3 bg-indigo-50 text-indigo-600 rounded-xl">★</button>
             </div>
-            <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl">
+            <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                 <button onclick="resetToGeoOffset()" class="offset-btn text-[10px]">↺</button>
-                <div class="flex items-center gap-3">
-                    <button onclick="adjTZ(-1)" class="offset-btn">-</button>
-                    <span id="tzLabel" class="text-xs font-black text-slate-700 min-w-[50px] text-center">UTC-4</span>
-                    <button onclick="adjTZ(1)" class="offset-btn">+</button>
+                <div class="flex items-center gap-4">
+                    <button onclick="adjTZ(-1)" class="offset-btn active:bg-slate-200">-</button>
+                    <span id="tzLabel" class="text-xs font-black text-slate-700 min-w-[60px] text-center">UTC-4</span>
+                    <button onclick="adjTZ(1)" class="offset-btn active:bg-slate-200">+</button>
                 </div>
             </div>
         </section>
 
-        <main class="visualizer-area"><canvas id="cvs" width="600" height="600"></canvas></main>
+        <main class="visualizer-area">
+            <canvas id="cvs" width="800" height="800"></canvas>
+        </main>
 
-        <div class="flex gap-2 overflow-x-auto px-1 py-2 mb-1 flex-shrink-0 no-scrollbar items-center">
-            <button onclick="showTip('Day', 'Full sunlight. Best for high-shutter speed action or harsh-shadow architecture shots.', '#fbbf24')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100 text-[9px] font-bold text-slate-500 uppercase whitespace-nowrap active:scale-95 transition-transform"><span class="w-2.5 h-2.5 rounded-full bg-[#fbbf24]"></span> Day</button>
-            <button onclick="showTip('Golden Hour', 'The hour after sunrise or before sunset. Provides soft, warm light perfect for portraits and landscapes.', '#f59e0b')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100 text-[9px] font-bold text-slate-500 uppercase whitespace-nowrap active:scale-95 transition-transform"><span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span> Golden Hour</button>
-            <button onclick="showTip('Twilight', 'Sun is below the horizon but still illuminating the sky. Includes civil, nautical, and astronomical twilight.', '#4f46e5')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100 text-[9px] font-bold text-slate-500 uppercase whitespace-nowrap active:scale-95 transition-transform"><span class="w-2.5 h-2.5 rounded-full bg-[#4f46e5]"></span> Twilight</button>
-            <button onclick="showTip('Night', 'The sun is more than 18° below the horizon. Pitch black sky, ideal for long-exposure astrophotography.', '#0f172a')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100 text-[9px] font-bold text-slate-500 uppercase whitespace-nowrap active:scale-95 transition-transform"><span class="w-2.5 h-2.5 rounded-full bg-[#0f172a]"></span> Night</button>
-            <button onclick="showTip('Moon Up', 'Indicates the period when the moon is physically above the horizon in your current sky.', '#cbd5e1')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100 text-[9px] font-bold text-slate-500 uppercase whitespace-nowrap active:scale-95 transition-transform"><span class="w-2.5 h-2.5 rounded-full bg-[#cbd5e1]"></span> Moon Up</button>
-            <button onclick="showTip('Solar Noon', 'The moment the sun is at its highest point in the sky for the day.', '#94a3b8')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-100 text-[9px] font-bold text-slate-500 uppercase whitespace-nowrap active:scale-95 transition-transform"><span class="w-[3px] h-2.5 bg-slate-400"></span> Solar Noon</button>
+        <div class="flex gap-2 overflow-x-auto px-2 py-3 mb-1 flex-shrink-0 no-scrollbar items-center">
+            <button onclick="showTip('Day', 'Full sunlight. Best for high-shutter speed or architecture shots.', '#fbbf24')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-100 text-[9px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-[#fbbf24]"></span> Day</button>
+            <button onclick="showTip('Golden Hour', 'Soft, warm light perfect for portraits and landscapes.', '#f59e0b')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-100 text-[9px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span> Golden Hour</button>
+            <button onclick="showTip('Twilight', 'The blue hour. Civil, Nautical, and Astronomical phases.', '#4f46e5')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-100 text-[9px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-[#4f46e5]"></span> Twilight</button>
+            <button onclick="showTip('Night', 'Total darkness. Ideal for astrophotography.', '#0f172a')" class="flex items-center gap-1.5 bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-100 text-[9px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-full bg-[#0f172a]"></span> Night</button>
         </div>
 
         <footer class="info-hub">
-            <div id="popover" class="absolute -top-16 left-2 right-2 bg-slate-900 text-white p-3 rounded-xl shadow-2xl z-50">
-                <p id="tipTitle" class="text-[10px] font-black uppercase tracking-tighter mb-0.5" style="color:#fbbf24">Title</p>
-                <p id="tipDesc" class="text-[11px] font-medium leading-tight text-slate-300">Description goes here.</p>
+            <div id="popover" class="absolute -top-16 left-4 right-4 bg-slate-900 text-white p-3 rounded-2xl shadow-2xl z-50">
+                <p id="tipTitle" class="text-[10px] font-black uppercase tracking-widest mb-0.5">TITLE</p>
+                <p id="tipDesc" class="text-[11px] font-medium leading-tight text-slate-300">Description.</p>
             </div>
 
-            <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
+            <div class="flex justify-between items-center mb-5 pb-5 border-b border-slate-50">
                 <div class="text-left">
-                    <p class="text-[9px] font-black text-amber-500 uppercase mb-1">☼ Sunrise</p>
-                    <time id="riseT" class="text-3xl font-black text-slate-900 tracking-tight">--:--</time>
-                    <p id="dayL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">-- Day</p>
+                    <p class="text-[9px] font-black text-amber-500 uppercase mb-1">Sunrise</p>
+                    <time id="riseT" class="text-3xl font-black text-slate-900 tracking-tighter">--:--</time>
+                    <p id="dayL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">--H --M DAY</p>
                 </div>
                 <div class="text-center">
-                    <div class="bg-slate-100 px-3 py-1 rounded-full mb-2">
-                        <span id="dateD" class="text-[10px] font-black text-slate-600 block">--</span>
+                    <div class="bg-indigo-600 px-3 py-1 rounded-full shadow-lg shadow-indigo-100">
+                        <span id="dateD" class="text-[10px] font-black text-white block">--</span>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-[9px] font-black text-indigo-500 uppercase mb-1">Sunset ☼</p>
-                    <time id="setT" class="text-3xl font-black text-slate-900 tracking-tight">--:--</time>
-                    <p id="nightL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">-- Night</p>
+                    <p class="text-[9px] font-black text-indigo-500 uppercase mb-1">Sunset</p>
+                    <time id="setT" class="text-3xl font-black text-slate-900 tracking-tighter">--:--</time>
+                    <p id="nightL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">--H --M NIGHT</p>
                 </div>
             </div>
             
-            <div class="flex justify-between items-center px-2 mb-4">
-                <div class="text-center">
-                    <p class="text-[7px] font-black text-slate-400 uppercase">Moonrise</p>
-                    <p id="mRise" class="text-xs font-bold text-slate-700">--:--</p>
+            <div class="flex justify-between items-center px-2 mb-5">
+                <div class="text-center bg-slate-50 px-4 py-2 rounded-xl flex-1 mr-2 border border-slate-100">
+                    <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Moonrise</p>
+                    <p id="mRise" class="text-sm font-black text-slate-800">--:--</p>
                 </div>
-                <div class="text-center">
-                    <p class="text-[7px] font-black text-slate-400 uppercase">Moonset</p>
-                    <p id="mSet" class="text-xs font-bold text-slate-700">--:--</p>
+                <div class="text-center bg-slate-50 px-4 py-2 rounded-xl flex-1 ml-2 border border-slate-100">
+                    <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Moonset</p>
+                    <p id="mSet" class="text-sm font-black text-slate-800">--:--</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-4">
                 <input type="range" id="sld" min="0" max="365" value="0" class="flex-1">
-                <button id="resetBtn" class="text-[10px] font-black text-indigo-600 uppercase">Live</button>
+                <button id="resetBtn" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase">Now</button>
             </div>
         </footer>
     </div>
 
     <script>
-        // Core Logic
-        const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 600, H = 600, R = 240, R_MOON = 180;
+        const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800, R = 320, R_MOON = 240;
         const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
         const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT'), tzLabel = document.getElementById('tzLabel');
-        const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), btnSaved = document.getElementById('btnSaved');
-        const mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet');
+        const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet');
         const pop = document.getElementById('popover'), tipT = document.getElementById('tipTitle'), tipD = document.getElementById('tipDesc');
 
         let manualOffset = Math.round(parseFloat(lonIn.value) / 15);
@@ -127,7 +119,7 @@
             clearTimeout(tipTimer);
             tipT.innerText = title; tipT.style.color = color; tipD.innerText = desc;
             pop.classList.add('show');
-            tipTimer = setTimeout(() => pop.classList.remove('show'), 4000);
+            tipTimer = setTimeout(() => pop.classList.remove('show'), 3500);
         }
 
         function adjTZ(v) { manualOffset += v; render(); }
@@ -140,7 +132,7 @@
         }
 
         function fmt(d) {
-            if (!d || isNaN(d.getTime())) return '--:--';
+            if (!d || isNaN(d.getTime())) return '---';
             let hr = d.getHours(), mn = d.getMinutes();
             return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${hr >= 12 ? 'PM' : 'AM'}`;
         }
@@ -161,8 +153,10 @@
             
             riseT.textContent = fmt(times.sunrise); 
             setT.textContent = fmt(times.sunset);
-            mRise.textContent = mTimes.alwaysUp ? 'UP ALL DAY' : (mTimes.alwaysDown ? 'DOWN ALL DAY' : fmt(mTimes.rise));
-            mSet.textContent = mTimes.alwaysUp ? 'UP ALL DAY' : (mTimes.alwaysDown ? 'DOWN ALL DAY' : fmt(mTimes.set));
+
+            // Corrected Moon Rise/Set display logic
+            mRise.textContent = mTimes.alwaysUp ? 'UP ALL DAY' : (mTimes.alwaysDown ? 'DOWN' : (mTimes.rise ? fmt(mTimes.rise) : '--:--'));
+            mSet.textContent = mTimes.alwaysUp ? 'UP ALL DAY' : (mTimes.alwaysDown ? 'DOWN' : (mTimes.set ? fmt(mTimes.set) : '--:--'));
 
             if (times.sunrise && times.sunset) {
                 const dl = (times.sunset - times.sunrise) / 3600000;
@@ -180,89 +174,73 @@
                 return (h/24)*2*Math.PI-Math.PI/2;
             };
 
-            const drawArc = (s, e, c, rad, w=40) => {
+            const drawArc = (s, e, c, rad, w=50) => {
                 if (!s || !e) return;
                 ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
-                ctx.arc(300, 300, rad, getPos(s), getPos(e));
+                ctx.arc(400, 400, rad, getPos(s), getPos(e));
                 ctx.stroke();
             };
 
+            // Sun Ring
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R); 
             drawArc(times.dawn, times.night, '#4f46e5', R); 
             drawArc(times.sunrise, times.sunset, '#fbbf24', R); 
-            drawArc(times.sunrise, times.goldenHourEnd, '#f59e0b', R, 45); 
-            drawArc(times.goldenHour, times.sunset, '#f59e0b', R, 45); 
+            drawArc(times.sunrise, times.goldenHourEnd, '#f59e0b', R, 60); 
+            drawArc(times.goldenHour, times.sunset, '#f59e0b', R, 60); 
 
+            // Noon Marker
             if (times.solarNoon) {
                 const noonAng = getPos(times.solarNoon);
-                ctx.strokeStyle = isNightAtTarget ? '#334155' : '#ffffff'; ctx.lineWidth = 4; ctx.beginPath();
-                ctx.moveTo(300 + (R-25)*Math.cos(noonAng), 300 + (R-25)*Math.sin(noonAng));
-                ctx.lineTo(300 + (R+25)*Math.cos(noonAng), 300 + (R+25)*Math.sin(noonAng));
+                ctx.strokeStyle = isNightAtTarget ? '#334155' : '#ffffff'; ctx.lineWidth = 5; ctx.beginPath();
+                ctx.moveTo(400 + (R-30)*Math.cos(noonAng), 400 + (R-30)*Math.sin(noonAng));
+                ctx.lineTo(400 + (R+30)*Math.cos(noonAng), 400 + (R+30)*Math.sin(noonAng));
                 ctx.stroke();
             }
 
-            drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R_MOON, 20); 
+            // Moon Ring
+            drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R_MOON, 25); 
             const sod = new Date(viewDate); sod.setHours(0,0,0,0);
             const eod = new Date(viewDate); eod.setHours(23,59,59,999);
             
-            if (mTimes.alwaysUp) { drawArc(sod, eod, '#cbd5e1', R_MOON, 20); } 
+            if (mTimes.alwaysUp) { drawArc(sod, eod, '#cbd5e1', R_MOON, 25); } 
             else if (!mTimes.alwaysDown && mTimes.rise && mTimes.set) {
-                if (mTimes.rise < mTimes.set) drawArc(mTimes.rise, mTimes.set, '#cbd5e1', R_MOON, 20);
-                else { drawArc(sod, mTimes.set, '#cbd5e1', R_MOON, 20); drawArc(mTimes.rise, eod, '#cbd5e1', R_MOON, 20); }
+                if (mTimes.rise < mTimes.set) drawArc(mTimes.rise, mTimes.set, '#cbd5e1', R_MOON, 25);
+                else { drawArc(sod, mTimes.set, '#cbd5e1', R_MOON, 25); drawArc(mTimes.rise, eod, '#cbd5e1', R_MOON, 25); }
             }
 
-            ctx.textAlign = 'center'; ctx.fillStyle = textColor; ctx.font = 'bold 12px Inter';
+            // Dial
+            ctx.textAlign = 'center'; ctx.fillStyle = textColor; ctx.font = 'bold 16px Inter';
             for (let i = 0; i < 24; i += 3) {
                 const a = (i/24)*2*Math.PI-Math.PI/2;
-                ctx.fillText(i === 0 ? '24' : i, 300 + 285*Math.cos(a), 300 + 285*Math.sin(a));
+                ctx.fillText(i === 0 ? '24' : i, 400 + 375*Math.cos(a), 400 + 375*Math.sin(a));
             }
 
+            // Current Time Hand
             const handAng = getPos(targetNow);
-            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath();
-            ctx.moveTo(300, 300); ctx.lineTo(300 + (R+10)*Math.cos(handAng), 300 + (R+10)*Math.sin(handAng));
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath();
+            ctx.moveTo(400, 400); ctx.lineTo(400 + (R+10)*Math.cos(handAng), 400 + (R+10)*Math.sin(handAng));
             ctx.stroke();
 
-            ctx.fillStyle = textColor; ctx.font = '900 70px Inter';
+            // Center Digital Time
+            ctx.fillStyle = textColor; ctx.font = '900 100px Inter';
             const hh = String(targetNow.getHours()).padStart(2, '0'), mm = String(targetNow.getMinutes()).padStart(2, '0');
-            ctx.fillText(`${hh}:${mm}`, 300, 320);
-        }
-
-        function saveToFavorite() {
-            const name = prompt("Name this favorite:");
-            if (name) {
-                localStorage.setItem('solarFav', JSON.stringify({ name: name.toUpperCase(), lat: latIn.value, lon: lonIn.value, tz: manualOffset }));
-                updateFavUI();
-            }
-        }
-        function updateFavUI() {
-            const s = JSON.parse(localStorage.getItem('solarFav'));
-            if (s) btnSaved.innerText = s.name;
-        }
-        function loadSavedLoc(btn) {
-            const s = JSON.parse(localStorage.getItem('solarFav'));
-            if (s) { 
-                latIn.value = s.lat; lonIn.value = s.lon; 
-                if(s.tz !== undefined) manualOffset = s.tz;
-                setActive(btn); 
-            }
-        }
-        function useCurrentLoc(btn) {
-            navigator.geolocation.getCurrentPosition(p => {
-                latIn.value = p.coords.latitude.toFixed(4); lonIn.value = p.coords.longitude.toFixed(4);
-                manualOffset = Math.round(p.coords.longitude / 15);
-                setActive(btn);
-            });
-        }
-        function setActive(btn) {
-            document.querySelectorAll('.fav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active'); render();
+            ctx.fillText(`${hh}:${mm}`, 400, 430);
         }
 
         sld.oninput = render;
-        latIn.oninput = () => { resetToGeoOffset(); };
-        lonIn.oninput = () => { resetToGeoOffset(); };
+        latIn.oninput = resetToGeoOffset;
+        lonIn.oninput = resetToGeoOffset;
         document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
-        window.onload = () => { updateFavUI(); render(); setInterval(render, 1000); };
+        
+        window.onload = () => { 
+            navigator.geolocation.getCurrentPosition(p => {
+                latIn.value = p.coords.latitude.toFixed(4);
+                lonIn.value = p.coords.longitude.toFixed(4);
+                resetToGeoOffset();
+            });
+            render(); 
+            setInterval(render, 1000); 
+        };
     </script>
 </body>
 </html>
