@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Luminaries Pro</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx='50' cy='50' r='50' fill='%234f46e5'/><path d='M50 10 A40 40 0 0 1 50 90 A25 25 0 0 0 50 10 Z' fill='white' opacity='0.8'/></svg>" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
     <style>
@@ -23,12 +22,11 @@
         
         .info-hub { background: white; padding: 1rem; border-radius: 1.5rem; box-shadow: 0 -4px 25px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
         
-        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
-
-        /* Phase Inspector Overlay */
         #phaseInfo { pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: scale(0.95); z-index: 50; }
         #phaseInfo.active { opacity: 1; transform: scale(1); }
+
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; }
     </style>
 </head>
 <body>
@@ -41,56 +39,46 @@
         <section class="settings-bar">
             <div class="input-group"><span>LAT</span><input type="number" id="latIn" value="45.2925" step="0.0001"></div>
             <div class="input-group"><span>LON</span><input type="number" id="lonIn" value="-66.1132" step="0.0001"></div>
-            <div class="flex items-center bg-slate-100 rounded-lg px-2 py-1">
-                <span id="tzLabel" class="text-[10px] font-black text-slate-600">UTC-3</span>
-            </div>
+            <div class="px-2 font-black text-[10px] text-slate-400">UTC-3</div>
         </section>
 
-        <main class="visualizer-area" id="vizContainer">
+        <main class="visualizer-area">
             <canvas id="cvs" width="800" height="800"></canvas>
-            
             <div id="phaseInfo" class="absolute inset-0 flex flex-col items-center justify-center">
-                <div class="bg-white/90 backdrop-blur-xl px-8 py-5 rounded-[2.5rem] border border-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] text-center">
-                    <span id="phaseLabel" class="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] block mb-1">PHASE NAME</span>
-                    <div class="text-3xl font-black text-slate-900 tabular-nums" id="phaseRange">00:00 - 00:00</div>
+                <div class="bg-white/95 backdrop-blur-xl px-8 py-5 rounded-[2.5rem] border border-white shadow-2xl text-center">
+                    <span id="phaseLabel" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">PHASE</span>
+                    <div class="text-3xl font-black text-slate-900 tabular-nums" id="phaseRange">--:--</div>
                 </div>
             </div>
         </main>
 
         <footer class="info-hub">
-            <div class="flex items-stretch gap-4 mb-4">
-                <div class="flex-1 bg-amber-50/50 rounded-2xl p-3 border border-amber-100/50">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex flex-col">
-                            <span class="text-[8px] font-black text-amber-600 uppercase tracking-tighter">Sunrise</span>
-                            <time id="riseT" class="text-xl font-black text-slate-900">--:--</time>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <span class="text-[8px] font-black text-amber-600 uppercase tracking-tighter">Sunset</span>
-                            <time id="setT" class="text-xl font-black text-slate-900">--:--</time>
-                        </div>
+            <div class="flex items-stretch gap-3 mb-4">
+                <div class="flex-1 bg-amber-50/50 rounded-2xl p-3 border border-amber-100/50 text-center">
+                    <span class="text-[7px] font-black text-amber-600 uppercase">Sun</span>
+                    <div class="flex flex-col gap-1 mt-1">
+                        <time id="riseT" class="text-sm font-black text-slate-900">--:--</time>
+                        <time id="setT" class="text-sm font-black text-slate-900">--:--</time>
                     </div>
-                    <div id="dayL" class="text-center text-[10px] font-bold text-amber-700/60 uppercase bg-white/80 py-1 rounded-lg">--H --M DAY</div>
                 </div>
 
-                <div class="flex-1 bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex flex-col">
-                            <span class="text-[8px] font-black text-indigo-600 uppercase tracking-tighter">Moonrise</span>
-                            <time id="mRise" class="text-xl font-black text-slate-900">--:--</time>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <span class="text-[8px] font-black text-indigo-600 uppercase tracking-tighter">Moonset</span>
-                            <time id="mSet" class="text-xl font-black text-slate-900">--:--</time>
-                        </div>
+                <div class="flex-[1.5] flex flex-col gap-2">
+                    <div id="dayL" class="flex-1 flex items-center justify-center text-[10px] font-black text-amber-700 bg-amber-100/40 rounded-xl border border-amber-200/30 uppercase tracking-tighter">--H --M DAY</div>
+                    <div id="nightL" class="flex-1 flex items-center justify-center text-[10px] font-black text-indigo-700 bg-indigo-100/40 rounded-xl border border-indigo-200/30 uppercase tracking-tighter">--H --M NIGHT</div>
+                </div>
+
+                <div class="flex-1 bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50 text-center">
+                    <span class="text-[7px] font-black text-indigo-600 uppercase">Moon</span>
+                    <div class="flex flex-col gap-1 mt-1">
+                        <time id="mRise" class="text-sm font-black text-slate-900">--:--</time>
+                        <time id="mSet" class="text-sm font-black text-slate-900">--:--</time>
                     </div>
-                    <div id="mPhase" class="text-center text-[10px] font-black text-indigo-700/60 uppercase bg-white/80 py-1 rounded-lg">PHASE</div>
                 </div>
             </div>
 
             <div class="flex items-center gap-4">
                 <input type="range" id="sld" min="0" max="365" value="0" class="flex-1">
-                <button id="resetBtn" class="text-[11px] font-black text-indigo-600 uppercase whitespace-nowrap bg-indigo-50 px-4 py-2 rounded-xl">Now</button>
+                <button id="resetBtn" class="text-[11px] font-black text-indigo-600 uppercase bg-indigo-50 px-4 py-2 rounded-xl">Now</button>
             </div>
         </footer>
     </div>
@@ -98,19 +86,10 @@
     <script>
         const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800, R = 340, R_MOON = 265;
         const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
-        const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT');
-        const dayL = document.getElementById('dayL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
-        const phaseInfo = document.getElementById('phaseInfo'), pLabel = document.getElementById('phaseLabel'), pRange = document.getElementById('phaseRange');
+        const riseT = document.getElementById('riseT'), setT = document.getElementById('setT'), dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL');
+        const mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), pInfo = document.getElementById('phaseInfo');
 
-        let manualOffset = -3; 
-        let currentTimes = null;
-        let currentMoon = null;
-
-        function getTargetDate(offsetHours) {
-            const now = new Date();
-            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-            return new Date(utc + (3600000 * offsetHours));
-        }
+        let currentSun = null, currentMoon = null;
 
         function fmt(d) {
             if (!d || isNaN(d.getTime())) return '--:--';
@@ -119,7 +98,6 @@
         }
 
         const getPos = (d) => {
-            if (!d) return 0;
             const h = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
             return (h/24)*2*Math.PI-Math.PI/2;
         };
@@ -127,106 +105,100 @@
         function render() {
             ctx.clearRect(0, 0, W, H);
             const lat = parseFloat(latIn.value), lon = parseFloat(lonIn.value);
-            const targetNow = getTargetDate(manualOffset);
+            const targetNow = new Date();
             const viewDate = new Date(targetNow);
             viewDate.setDate(viewDate.getDate() + parseInt(sld.value));
-            
-            dateD.textContent = viewDate.toLocaleDateString('en-US',{month:'short',day:'numeric'}).toUpperCase();
-            
-            currentTimes = SunCalc.getTimes(viewDate, lat, lon);
+
+            currentSun = SunCalc.getTimes(viewDate, lat, lon);
             currentMoon = SunCalc.getMoonTimes(viewDate, lat, lon);
-            const mIllum = SunCalc.getMoonIllumination(viewDate);
-            
-            riseT.textContent = fmt(currentTimes.sunrise).replace(' AM','').replace(' PM',''); 
-            setT.textContent = fmt(currentTimes.sunset).replace(' AM','').replace(' PM','');
-            mRise.textContent = currentMoon.rise ? fmt(currentMoon.rise).split(' ')[0] : '--:--';
-            mSet.textContent = currentMoon.set ? fmt(currentMoon.set).split(' ')[0] : '--:--';
-            
-            const phases = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
-            mPhase.textContent = phases[Math.floor(mIllum.phase * 8) % 8].toUpperCase();
 
-            if (currentTimes.sunrise && currentTimes.sunset) {
-                const dl = (currentTimes.sunset - currentTimes.sunrise) / 3600000;
-                dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
-            }
+            // Update Ribbon
+            riseT.textContent = fmt(currentSun.sunrise).split(' ')[0];
+            setT.textContent = fmt(currentSun.sunset).split(' ')[0];
+            mRise.textContent = currentMoon.rise ? fmt(currentMoon.rise).split(' ')[0] : '---';
+            mSet.textContent = currentMoon.set ? fmt(currentMoon.set).split(' ')[0] : '---';
 
-            const isNight = targetNow < currentTimes.sunrise || targetNow > currentTimes.sunset;
+            const dayLen = (currentSun.sunset - currentSun.sunrise) / 3600000;
+            dayL.textContent = `${Math.floor(dayLen)}H ${Math.round((dayLen%1)*60)}M DAY`;
+            nightL.textContent = `${Math.floor(24-dayLen)}H ${Math.round(((24-dayLen)%1)*60)}M NIGHT`;
+
+            const isNight = targetNow < currentSun.sunrise || targetNow > currentSun.sunset;
             canvas.style.backgroundColor = isNight ? '#0f172a' : '#ffffff';
             const textColor = isNight ? '#f8fafc' : '#1e293b';
 
-            const drawArc = (s, e, c, rad, w=60) => {
-                if (!s || !e) return;
-                ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'butt'; ctx.beginPath();
-                ctx.arc(400, 400, rad, getPos(s), getPos(e));
-                ctx.stroke();
-            };
-
-            // Outer Solar Ring
-            drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNight ? '#1e293b' : '#f1f5f9', R); 
-            drawArc(currentTimes.dawn, currentTimes.night, '#4f46e5', R); 
-            drawArc(currentTimes.sunrise, currentTimes.sunset, '#fbbf24', R); 
-            drawArc(currentTimes.sunrise, currentTimes.goldenHourEnd, '#f59e0b', R, 75); 
-            drawArc(currentTimes.goldenHour, currentTimes.sunset, '#f59e0b', R, 75); 
-            
-            // Inner Moon Ring
-            drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNight ? '#1e293b' : '#f1f5f9', R_MOON, 35); 
-            if (currentMoon.rise && currentMoon.set) {
-                if (currentMoon.rise < currentMoon.set) drawArc(currentMoon.rise, currentMoon.set, '#cbd5e1', R_MOON, 35);
-                else { 
-                    drawArc(currentMoon.rise, new Date(viewDate.setHours(23,59)), '#cbd5e1', R_MOON, 35);
-                    drawArc(new Date(viewDate.setHours(0,0)), currentMoon.set, '#cbd5e1', R_MOON, 35);
+            // 1. Time Indicators (Scale)
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            for (let i = 0; i < 24; i++) {
+                const ang = (i/24)*2*Math.PI - Math.PI/2;
+                const isMajor = i % 6 === 0;
+                ctx.fillStyle = isMajor ? textColor : (isNight ? '#334155' : '#cbd5e1');
+                ctx.font = isMajor ? '900 24px Inter' : '600 12px Inter';
+                if (isMajor) ctx.fillText(i === 0 ? '24' : i, 400 + 380 * Math.cos(ang), 400 + 380 * Math.sin(ang));
+                else {
+                    ctx.beginPath();
+                    ctx.arc(400 + 375 * Math.cos(ang), 400 + 375 * Math.sin(ang), 2, 0, Math.PI*2);
+                    ctx.fill();
                 }
             }
 
-            // Current Time Hand
-            const handAng = getPos(targetNow);
-            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath();
-            ctx.moveTo(400, 400); ctx.lineTo(400 + (R+15)*Math.cos(handAng), 400 + (R+15)*Math.sin(handAng));
-            ctx.stroke();
+            const drawArc = (s, e, c, rad, w=60) => {
+                ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
+                ctx.arc(400, 400, rad, getPos(s), getPos(e)); ctx.stroke();
+            };
 
-            ctx.fillStyle = textColor; ctx.font = '900 120px Inter'; ctx.textAlign = 'center';
+            // 2. The Rings
+            drawArc(new Date(viewDate).setHours(0,0), new Date(viewDate).setHours(23,59), isNight ? '#1e293b' : '#f1f5f9', R);
+            drawArc(currentSun.sunrise, currentSun.sunset, '#fbbf24', R);
+            drawArc(currentSun.sunrise, currentSun.goldenHourEnd, '#f59e0b', R, 75);
+            drawArc(currentSun.goldenHour, currentSun.sunset, '#f59e0b', R, 75);
+
+            if (currentMoon.rise && currentMoon.set) {
+                const mC = isNight ? '#475569' : '#cbd5e1';
+                if (currentMoon.rise < currentMoon.set) drawArc(currentMoon.rise, currentMoon.set, mC, R_MOON, 30);
+                else {
+                    drawArc(currentMoon.rise, new Date(viewDate).setHours(23,59,59), mC, R_MOON, 30);
+                    drawArc(new Date(viewDate).setHours(0,0,0), currentMoon.set, mC, R_MOON, 30);
+                }
+            }
+
+            // 3. The Hand
+            const hAng = getPos(targetNow);
+            ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(400, 400); 
+            ctx.lineTo(400 + 350 * Math.cos(hAng), 400 + 350 * Math.sin(hAng)); ctx.stroke();
+
+            ctx.fillStyle = textColor; ctx.font = '900 120px Inter';
             ctx.fillText(`${String(targetNow.getHours()).padStart(2,'0')}:${String(targetNow.getMinutes()).padStart(2,'0')}`, 400, 440);
         }
 
-        // Interaction Logic
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (W / rect.width) - 400;
-            const y = (e.clientY - rect.top) * (H / rect.height) - 400;
+            const x = (e.clientX - rect.left) * (800 / rect.width) - 400;
+            const y = (e.clientY - rect.top) * (800 / rect.height) - 400;
             const dist = Math.sqrt(x*x + y*y);
-            const angle = Math.atan2(y, x);
-            
-            let normAngle = angle + Math.PI/2;
-            if (normAngle < 0) normAngle += 2 * Math.PI;
+            const angle = Math.atan2(y, x) + Math.PI/2;
+            const norm = angle < 0 ? angle + 2*Math.PI : angle;
 
-            const check = (start, end) => {
-                const s = getPos(start) + Math.PI/2, e = getPos(end) + Math.PI/2;
-                return s < e ? (normAngle >= s && normAngle <= e) : (normAngle >= s || normAngle <= e);
+            const check = (s, e) => {
+                const start = getPos(s) + Math.PI/2, end = getPos(e) + Math.PI/2;
+                return start < end ? (norm >= start && norm <= end) : (norm >= start || norm <= end);
             };
 
-            if (dist > 280 && dist < 390) { // Sun Ring
-                if (check(currentTimes.goldenHour, currentTimes.sunset) || check(currentTimes.sunrise, currentTimes.goldenHourEnd)) 
-                    return showPopup("Golden Hour", `${fmt(currentTimes.sunrise)} - ${fmt(currentTimes.goldenHourEnd)}`);
-                if (check(currentTimes.sunrise, currentTimes.sunset)) 
-                    return showPopup("Daylight", `${fmt(currentTimes.sunrise)} - ${fmt(currentTimes.sunset)}`);
-                if (check(currentTimes.dawn, currentTimes.dusk))
-                    return showPopup("Twilight", `${fmt(currentTimes.dawn)} - ${fmt(currentTimes.dusk)}`);
-                showPopup("Night", "Full Darkness");
-            } else if (dist > 200 && dist < 280) { // Moon Ring
-                if (currentMoon.rise && currentMoon.set) showPopup("Moon Visibility", `${fmt(currentMoon.rise)} - ${fmt(currentMoon.set)}`);
+            if (dist > 280 && dist < 390) {
+                if (check(currentSun.sunrise, currentSun.goldenHourEnd) || check(currentSun.goldenHour, currentSun.sunset)) showPop("Golden Hour", `${fmt(currentSun.sunrise)} - ${fmt(currentSun.goldenHourEnd)}`);
+                else if (check(currentSun.sunrise, currentSun.sunset)) showPop("Daylight", `${fmt(currentSun.sunrise)} - ${fmt(currentSun.sunset)}`);
+                else showPop("Night", `${fmt(currentSun.sunset)} - ${fmt(currentSun.sunrise)}`);
             }
         });
 
-        let timer;
-        function showPopup(l, r) {
-            pLabel.textContent = l; pRange.textContent = r;
-            phaseInfo.classList.add('active');
-            clearTimeout(timer);
-            timer = setTimeout(() => phaseInfo.classList.remove('active'), 3000);
+        function showPop(l, r) {
+            document.getElementById('phaseLabel').textContent = l;
+            document.getElementById('phaseRange').textContent = r;
+            pInfo.classList.add('active');
+            setTimeout(() => pInfo.classList.remove('active'), 3000);
         }
 
         sld.oninput = render;
-        document.getElementById('resetBtn').onclick = () => { sld.value = 0; render(); };
         window.onload = () => { render(); setInterval(render, 1000); };
     </script>
 </body>
