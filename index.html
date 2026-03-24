@@ -26,7 +26,6 @@
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
 
-        /* Phase Inspector Overlay */
         #phaseInfo { pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: scale(0.95); z-index: 50; }
         #phaseInfo.active { opacity: 1; transform: scale(1); }
     </style>
@@ -70,7 +69,10 @@
                             <time id="setT" class="text-xl font-black text-slate-900">--:--</time>
                         </div>
                     </div>
-                    <div id="dayL" class="text-center text-[10px] font-bold text-amber-700/60 uppercase bg-white/80 py-1 rounded-lg">--H --M DAY</div>
+                    <div class="flex flex-col gap-1">
+                        <div id="dayL" class="text-center text-[9px] font-black text-amber-700 uppercase bg-white/80 py-1 rounded-md">--H --M DAY</div>
+                        <div id="nightL" class="text-center text-[9px] font-black text-slate-400 uppercase bg-slate-50/80 py-1 rounded-md">--H --M NIGHT</div>
+                    </div>
                 </div>
 
                 <div class="flex-1 bg-indigo-50/50 rounded-2xl p-3 border border-indigo-100/50">
@@ -99,7 +101,7 @@
         const canvas = document.getElementById('cvs'), ctx = canvas.getContext('2d'), W = 800, H = 800, R = 340, R_MOON = 265;
         const latIn = document.getElementById('latIn'), lonIn = document.getElementById('lonIn'), sld = document.getElementById('sld');
         const dateD = document.getElementById('dateD'), riseT = document.getElementById('riseT'), setT = document.getElementById('setT');
-        const dayL = document.getElementById('dayL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
+        const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet'), mPhase = document.getElementById('mPhase');
         const phaseInfo = document.getElementById('phaseInfo'), pLabel = document.getElementById('phaseLabel'), pRange = document.getElementById('phaseRange');
 
         let manualOffset = -3; 
@@ -115,7 +117,8 @@
         function fmt(d) {
             if (!d || isNaN(d.getTime())) return '--:--';
             let hr = d.getHours(), mn = d.getMinutes();
-            return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${hr >= 12 ? 'PM' : 'AM'}`;
+            const ampm = hr >= 12 ? 'PM' : 'AM';
+            return `${hr % 12 || 12}:${String(mn).padStart(2, '0')} ${ampm}`;
         }
 
         const getPos = (d) => {
@@ -148,6 +151,7 @@
             if (currentTimes.sunrise && currentTimes.sunset) {
                 const dl = (currentTimes.sunset - currentTimes.sunrise) / 3600000;
                 dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
+                nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
             }
 
             const isNight = targetNow < currentTimes.sunrise || targetNow > currentTimes.sunset;
@@ -188,7 +192,6 @@
             ctx.fillText(`${String(targetNow.getHours()).padStart(2,'0')}:${String(targetNow.getMinutes()).padStart(2,'0')}`, 400, 440);
         }
 
-        // Interaction Logic
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX - rect.left) * (W / rect.width) - 400;
@@ -204,15 +207,15 @@
                 return s < e ? (normAngle >= s && normAngle <= e) : (normAngle >= s || normAngle <= e);
             };
 
-            if (dist > 280 && dist < 390) { // Sun Ring
+            if (dist > 280 && dist < 390) { 
                 if (check(currentTimes.goldenHour, currentTimes.sunset) || check(currentTimes.sunrise, currentTimes.goldenHourEnd)) 
                     return showPopup("Golden Hour", `${fmt(currentTimes.sunrise)} - ${fmt(currentTimes.goldenHourEnd)}`);
                 if (check(currentTimes.sunrise, currentTimes.sunset)) 
                     return showPopup("Daylight", `${fmt(currentTimes.sunrise)} - ${fmt(currentTimes.sunset)}`);
                 if (check(currentTimes.dawn, currentTimes.dusk))
                     return showPopup("Twilight", `${fmt(currentTimes.dawn)} - ${fmt(currentTimes.dusk)}`);
-                showPopup("Night", "Full Darkness");
-            } else if (dist > 200 && dist < 280) { // Moon Ring
+                showPopup("Night", `${fmt(currentTimes.sunset)} - ${fmt(currentTimes.sunrise)}`);
+            } else if (dist > 200 && dist < 280) { 
                 if (currentMoon.rise && currentMoon.set) showPopup("Moon Visibility", `${fmt(currentMoon.rise)} - ${fmt(currentMoon.set)}`);
             }
         });
