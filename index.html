@@ -15,7 +15,7 @@
         .visualizer-area { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0.25rem 0; }
         canvas { max-height: 100%; max-width: 100%; aspect-ratio: 1/1; background: white; border-radius: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
         .info-hub { background: white; padding: 1rem; border-radius: 1.75rem; box-shadow: 0 -5px 30px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
-        .fav-btn { font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 8px; text-transform: uppercase; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; transition: all 0.2s; }
+        .fav-btn { font-size: 9px; font-weight: 800; padding: 6px 10px; border-radius: 8px; text-transform: uppercase; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
         .fav-btn.active { background: #4f46e5; color: white; border-color: #4f46e5; }
         input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
@@ -34,11 +34,11 @@
         <section class="settings-panel">
             <div class="flex gap-2 items-end">
                 <div class="flex-1">
-                    <label class="text-[8px] font-black text-slate-400 block mb-1">LAT</label>
+                    <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase">Lat</label>
                     <input type="number" id="latIn" value="45.27" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <div class="flex-1">
-                    <label class="text-[8px] font-black text-slate-400 block mb-1">LON</label>
+                    <label class="text-[8px] font-black text-slate-400 block mb-1 uppercase">Lon</label>
                     <input type="number" id="lonIn" value="-66.06" step="0.0001" class="w-full p-2 bg-slate-50 rounded-xl text-xs font-bold border border-slate-100 text-center">
                 </div>
                 <button onclick="saveToFavorite()" class="h-[34px] px-3 bg-indigo-50 text-indigo-600 rounded-xl text-[16px] active:scale-90 transition-transform">★</button>
@@ -53,20 +53,20 @@
                 <div class="text-left">
                     <p class="text-[9px] font-black text-amber-500 uppercase mb-1">Sunrise</p>
                     <time id="riseT" class="text-3xl font-black text-slate-900 tracking-tight">--:--</time>
-                    <p id="dayL" class="text-[8px] font-bold text-slate-400 mt-1">-- DAY</p>
+                    <p id="dayL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">-- Day</p>
                 </div>
                 <div class="bg-slate-100 px-3 py-1 rounded-full"><span id="dateD" class="text-[10px] font-black text-slate-600">--</span></div>
                 <div class="text-right">
                     <p class="text-[9px] font-black text-indigo-500 uppercase mb-1">Sunset</p>
                     <time id="setT" class="text-3xl font-black text-slate-900 tracking-tight">--:--</time>
-                    <p id="nightL" class="text-[8px] font-bold text-slate-400 mt-1">-- NIGHT</p>
+                    <p id="nightL" class="text-[8px] font-bold text-slate-400 mt-1 uppercase">-- Night</p>
                 </div>
             </div>
             <div class="flex justify-between items-center mb-4 px-1">
                 <div class="text-left"><p class="text-[8px] font-black text-slate-300 uppercase">Moonrise</p><time id="mRise" class="text-sm font-bold text-slate-500">--:--</time></div>
                 <div class="text-right"><p class="text-[8px] font-black text-slate-300 uppercase">Moonset</p><time id="mSet" class="text-sm font-bold text-slate-500">--:--</time></div>
             </div>
-            <div class="flex items-center gap-3"><input type="range" id="sld" min="1" max="365" value="1" class="flex-1"><div class="text-[10px] font-black text-indigo-600">LIVE</div></div>
+            <div class="flex items-center gap-3"><input type="range" id="sld" min="1" max="365" value="1" class="flex-1"><div class="text-[10px] font-black text-indigo-600 uppercase">Live</div></div>
         </footer>
     </div>
 
@@ -75,7 +75,7 @@
         
         function saveToFavorite() {
             const currentName = btnSaved.innerText === "FAVORITE" ? "" : btnSaved.innerText;
-            const name = prompt("Enter a name for this favorite location:", currentName);
+            const name = prompt("Enter location name:", currentName);
             if (name) {
                 const data = { name: name.toUpperCase(), lat: latIn.value, lon: lonIn.value };
                 localStorage.setItem('solarFav', JSON.stringify(data));
@@ -102,7 +102,7 @@
                     latIn.value = p.coords.latitude.toFixed(4);
                     lonIn.value = p.coords.longitude.toFixed(4);
                     setActive(btn);
-                }, () => alert("Location access denied."));
+                }, () => alert("GPS access denied."));
             }
         }
 
@@ -118,7 +118,13 @@
             const dayL = document.getElementById('dayL'), nightL = document.getElementById('nightL'), mRise = document.getElementById('mRise'), mSet = document.getElementById('mSet');
 
             const toDec = (d, lon) => d ? (d.getUTCHours() + d.getUTCMinutes()/60 + (lon/15) + 24) % 24 : null;
-            const fmt = h => h === null ? '--:--' : `${Math.floor(h)%12||12}:${String(Math.floor((h%1)*60)).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+            const fmt = (h, showAmPm = true) => {
+                if (h === null || isNaN(h)) return '--:--';
+                const hours = Math.floor(h) % 24;
+                const displayH = hours % 12 || 12;
+                const m = String(Math.floor((h % 1) * 60)).padStart(2, '0');
+                return showAmPm ? `${displayH}:${m} ${hours >= 12 ? 'PM' : 'AM'}` : `${displayH}:${m}`;
+            };
 
             function render() {
                 ctx.clearRect(0, 0, W, H);
@@ -135,43 +141,56 @@
                 if (sun.rise !== null) {
                     const dl = (sun.set - sun.rise + 24) % 24;
                     dayL.textContent = `${Math.floor(dl)}H ${Math.round((dl%1)*60)}M DAY`;
-                    nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl) % 1) * 60)}M NIGHT`;
+                    nightL.textContent = `${Math.floor(24-dl)}H ${Math.round(((24-dl)%1)*60)}M NIGHT`;
                 }
 
+                // Clock logic fix
                 const now = new Date(), nowH = (now.getUTCHours() + now.getUTCMinutes()/60 + (lon/15) + 24) % 24;
-                const arc = (s, e, c) => {
-                    if (s === null) return;
-                    ctx.strokeStyle = c; ctx.lineWidth = 80; ctx.beginPath();
-                    ctx.arc(300, 300, R, (s/24)*2*Math.PI-Math.PI/2, (e/24)*2*Math.PI-Math.PI/2);
+                const arc = (sStart, sEnd, color) => {
+                    if (sStart === null || sEnd === null) return;
+                    ctx.strokeStyle = color; ctx.lineWidth = 80; ctx.beginPath();
+                    ctx.arc(300, 300, R, (sStart/24)*2*Math.PI-Math.PI/2, (sEnd/24)*2*Math.PI-Math.PI/2);
                     ctx.stroke();
                 };
 
+                // Draw background rings
                 arc(0, 24, '#0f172a');
-                if (sun.rise !== null) { arc(sun.dawn, sun.sunrise, '#4f46e5'); arc(sun.sunset, sun.night, '#4f46e5'); arc(sun.sunrise, sun.sunset, '#fbbf24'); }
+                if (sun.rise !== null) { 
+                    arc(sun.dawn, sun.rise, '#4f46e5'); 
+                    arc(sun.set, sun.night, '#4f46e5'); 
+                    arc(sun.rise, sun.set, '#fbbf24'); 
+                }
 
+                // Labels
                 ctx.textAlign = 'center'; ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px Inter';
                 for (let i = 0; i < 24; i += 3) {
                     const a = (i/24)*2*Math.PI-Math.PI/2;
                     ctx.fillText(i === 0 ? '24' : i, 300 + 285*Math.cos(a), 300 + 285*Math.sin(a));
                 }
 
+                // Hand
                 ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath();
                 ctx.moveTo(300, 300);
                 ctx.lineTo(300 + 200*Math.cos((nowH/24)*2*Math.PI-Math.PI/2), 300 + 200*Math.sin((nowH/24)*2*Math.PI-Math.PI/2));
                 ctx.stroke();
                 
-                ctx.font = '900 80px Inter'; ctx.fillText(fmt(nowH).split(' ')[0], 300, 305);
+                // Digital Center
+                ctx.fillStyle = '#1e293b'; ctx.font = '900 80px Inter';
+                ctx.fillText(fmt(nowH, false), 300, 310);
             }
 
             let tick = false;
             window.requestUpdate = () => { if(!tick) { requestAnimationFrame(() => { render(); tick = false; }); tick = true; } };
             [sld, latIn, lonIn].forEach(e => e.oninput = window.requestUpdate);
-            document.getElementById('resetBtn').onclick = () => { sld.value = Math.floor((new Date() - new Date(2026,0,0))/86400000); window.requestUpdate(); };
+            document.getElementById('resetBtn').onclick = () => { 
+                sld.value = Math.floor((new Date() - new Date(2026,0,0))/86400000); 
+                window.requestUpdate(); 
+            };
             window.onload = () => { 
                 updateFavUI(); 
                 sld.value = Math.floor((new Date() - new Date(2026,0,0))/86400000); 
                 window.requestUpdate(); 
-                setInterval(window.requestUpdate, 30000); 
+                setInterval(window.requestUpdate, 1000); // 1-second update for clock smoothness
             };
         })();
     </script>
