@@ -12,7 +12,6 @@
         html, body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; height: 100dvh; overflow: hidden; }
         .app-container { display: flex; flex-direction: column; height: 100%; padding: 0.4rem; padding-top: calc(0.2rem + var(--safe-top)); box-sizing: border-box; max-width: 480px; margin: 0 auto; }
         
-        /* Ultra-compact UTC Bar */
         .settings-bar { background: white; border-radius: 0.75rem; padding: 0.4rem; border: 1px solid #f1f5f9; display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0; margin-bottom: 0.4rem; }
         .input-group { background: #f8fafc; border-radius: 0.5rem; padding: 0.2rem 0.5rem; border: 1px solid #f1f5f9; display: flex; align-items: center; flex: 1; }
         .input-group span { font-size: 7px; font-weight: 900; color: #94a3b8; margin-right: 4px; }
@@ -21,12 +20,10 @@
         .btn-tiny { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #64748b; background: white; border-radius: 4px; }
         .tz-text { font-size: 9px; font-weight: 900; color: #475569; min-width: 42px; text-align: center; }
 
-        /* Visualization Area */
         .visualizer-area { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; position: relative; }
         canvas { height: 100%; width: 100%; object-fit: contain; background: white; border-radius: 1.25rem; transition: background-color 0.5s ease; }
         
-        /* ToolTip Popup */
-        #tip { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; padding: 8px 12px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 80%; display: none; z-index: 50; pointer-events: none; }
+        #tip { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: white; padding: 8px 12px; border-radius: 12px; border: 1px solid #f1f5f9; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 85%; display: none; z-index: 50; pointer-events: none; }
 
         .info-hub { background: white; padding: 0.6rem 1rem; border-radius: 1.25rem; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; flex-shrink: 0; margin-bottom: var(--safe-bottom); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -57,7 +54,7 @@
             <canvas id="cvs" width="800" height="800"></canvas>
             <div id="tip">
                 <div class="flex items-center gap-2 mb-1">
-                    <div id="tipColor" class="w-2 h-2 rounded-full"></div>
+                    <div id="tipColor" class="w-2 h-2 rounded-full border border-slate-100"></div>
                     <span id="tipTitle" class="text-[10px] font-black uppercase tracking-tighter"></span>
                 </div>
                 <p id="tipBody" class="text-[9px] text-slate-500 leading-tight font-medium"></p>
@@ -65,16 +62,17 @@
         </main>
 
         <div class="flex gap-2 overflow-x-auto py-2 flex-shrink-0 no-scrollbar items-center justify-center">
-            <button onclick="showTip('Day', 'Full sunlight. Best for high-shutter speed or architecture shots.', '#fbbf24')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl shadow-sm border border-slate-100 text-[8px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#fbbf24]"></span> Day</button>
-            <button onclick="showTip('Golden Hour', 'Soft, warm light perfect for portraits and landscapes.', '#f59e0b')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl shadow-sm border border-slate-100 text-[8px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span> Golden Hour</button>
-            <button onclick="showTip('Twilight', 'The blue hour. Civil, Nautical, and Astronomical phases.', '#4f46e5')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl shadow-sm border border-slate-100 text-[8px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#4f46e5]"></span> Twilight</button>
-            <button onclick="showTip('Night', 'Total darkness. Ideal for astrophotography.', '#0f172a')" class="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl shadow-sm border border-slate-100 text-[8px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-[#0f172a]"></span> Night</button>
+            <button onclick="showTip('Day', 'Full sunlight. Best for high-shutter speed or architecture shots.', '#fbbf24')" class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-lg shadow-sm border border-slate-100 text-[7px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-[#fbbf24]"></span> Day</button>
+            <button onclick="showTip('Golden Hour', 'Soft, warm light perfect for portraits and landscapes.', '#f59e0b')" class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-lg shadow-sm border border-slate-100 text-[7px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span> Golden</button>
+            <button onclick="showTip('Twilight', 'The blue hour. Civil, Nautical, and Astronomical phases.', '#4f46e5')" class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-lg shadow-sm border border-slate-100 text-[7px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-[#4f46e5]"></span> Twilight</button>
+            <button onclick="showTip('Night', 'Total darkness. Ideal for astrophotography.', '#0f172a')" class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-lg shadow-sm border border-slate-100 text-[7px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-[#0f172a]"></span> Night</button>
+            <button onclick="showTip('Moonlight', 'The period when the moon is above the horizon.', '#cbd5e1')" class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-lg shadow-sm border border-slate-100 text-[7px] font-extrabold text-slate-500 uppercase whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-[#cbd5e1]"></span> Moon</button>
         </div>
 
         <footer class="info-hub">
             <div class="flex justify-between items-center mb-2">
                 <div class="flex flex-col"><span class="text-[7px] font-black text-amber-500 uppercase">Sunrise</span><time id="riseT" class="text-xl font-black text-slate-900 leading-tight">--:--</time></div>
-                <div class="bg-indigo-600 px-2.5 py-0.5 rounded-full"><span id="dateD" class="text-[9px] font-black text-white uppercase">--</span></div>
+                <div class="bg-indigo-600 px-2.5 py-0.5 rounded-full shadow-lg shadow-indigo-50"><span id="dateD" class="text-[9px] font-black text-white uppercase">--</span></div>
                 <div class="flex flex-col items-end"><span class="text-[7px] font-black text-indigo-500 uppercase">Sunset</span><time id="setT" class="text-xl font-black text-slate-900 leading-tight">--:--</time></div>
             </div>
             
@@ -111,7 +109,7 @@
             document.getElementById('tipBody').textContent = text;
             document.getElementById('tipColor').style.backgroundColor = color;
             tip.style.display = 'block';
-            setTimeout(() => { tip.style.display = 'none'; }, 4000);
+            setTimeout(() => { tip.style.display = 'none'; }, 5000);
         }
 
         function adjTZ(v) { manualOffset += v; render(); }
@@ -184,12 +182,14 @@
                 ctx.stroke();
             };
 
+            // Solar Rings
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R); 
             drawArc(times.dawn, times.night, '#4f46e5', R); 
             drawArc(times.sunrise, times.sunset, '#fbbf24', R); 
             drawArc(times.sunrise, times.goldenHourEnd, '#f59e0b', R, 70); 
             drawArc(times.goldenHour, times.sunset, '#f59e0b', R, 70); 
 
+            // Inner Moon Ring
             drawArc(new Date(2026,0,1,0,0), new Date(2026,0,1,23,59), isNightAtTarget ? '#1e293b' : '#f1f5f9', R_MOON, 35); 
             const sod = new Date(viewDate); sod.setHours(0,0,0,0);
             const eod = new Date(viewDate); eod.setHours(23,59,59,999);
